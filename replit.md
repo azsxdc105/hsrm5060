@@ -1,111 +1,113 @@
-# Overview
+# نظام إدارة مطالبات التأمين السعودي
 
-This is a Python-based email file sender application that automatically sends all files from a specified folder to an email address via Gmail SMTP. The application is designed to be simple and configurable, supporting both Arabic and English languages in its documentation and user interface.
+## نظرة عامة
+نظام ويب شامل لإدارة المطالبات المالية لشركات التأمين في المملكة العربية السعودية. يوفر النظام إدارة متكاملة للمطالبات مع إرسال تلقائي للبريد الإلكتروني، إدارة المرفقات، وواجهة عربية سهلة الاستخدام.
+
+## الحالة الحالية
+- ✅ تم إنشاء قاعدة البيانات وإعداد الجداول
+- ✅ تم إضافة 18 شركة تأمين سعودية
+- ✅ تم إنشاء حساب الأدمن (admin@claims.com / admin123)
+- ✅ تم إعداد نظام المصادقة والأدوار
+- ✅ تم إنشاء نظام إدارة المطالبات
+- ✅ تم إعداد نظام إرسال البريد الإلكتروني
+- ✅ تم إنشاء لوحة التحكم الإدارية
+
+## المميزات الرئيسية
+
+### 1. إدارة المطالبات
+- إنشاء مطالبات جديدة مع جميع البيانات المطلوبة
+- رفع ملفات متعددة (PDF, JPG, PNG, DOCX)
+- تتبع حالة المطالبات (مسودة، جاهز، مرسل، فشل، مستلم، مدفوع)
+- تحديث وتعديل المطالبات
+- تصدير المرفقات كملف ZIP
+
+### 2. إرسال البريد الإلكتروني
+- إرسال تلقائي للمطالبات إلى شركات التأمين
+- قوالب بريد إلكتروني قابلة للتخصيص لكل شركة
+- سجل كامل لجميع عمليات الإرسال
+- دعم المرفقات التلقائية
+
+### 3. إدارة شركات التأمين
+- قاعدة بيانات شاملة لشركات التأمين السعودية
+- إعداد بريد إلكتروني منفصل لكل شركة
+- قوالب بريد مخصصة لكل شركة
+- إدارة البيانات الإضافية (روابط، ملاحظات)
+
+### 4. نظام المستخدمين والأدوار
+- نظام مصادقة آمن
+- ثلاثة أدوار: مدير، موظف مطالبات، مشاهد
+- إدارة شاملة للمستخدمين
+
+### 5. لوحة التحكم والتقارير
+- إحصائيات شاملة للمطالبات
+- تقارير مفصلة حسب الشركة والحالة
+- متابعة نسب النجاح
+- سجل كامل للبريد الإلكتروني
+
+## التقنيات المستخدمة
+- **Backend**: Flask + SQLAlchemy + PostgreSQL
+- **Frontend**: Bootstrap 5 RTL + Arabic UI
+- **Security**: Flask-Login, CSRF Protection, Bcrypt
+- **Email**: Flask-Mail with SMTP
+- **File Upload**: Werkzeug with security validation
+- **Database**: PostgreSQL (production ready)
+
+## هيكل المشروع
+```
+├── app/
+│   ├── __init__.py           # تهيئة التطبيق
+│   ├── models.py             # نماذج قاعدة البيانات
+│   ├── forms.py              # نماذج الويب
+│   ├── email_utils.py        # وظائف البريد الإلكتروني
+│   ├── routes/              # المسارات
+│   │   ├── auth.py          # المصادقة
+│   │   ├── main.py          # الصفحات الرئيسية
+│   │   ├── claims.py        # إدارة المطالبات
+│   │   └── admin.py         # لوحة الإدارة
+│   └── templates/           # قوالب HTML
+├── config.py                # إعدادات التطبيق
+├── run.py                   # تشغيل التطبيق
+├── seed_data.py             # بيانات البداية
+└── requirements.txt         # المكتبات المطلوبة
+```
+
+## الأدوار والصلاحيات
+- **مدير (Admin)**: صلاحيات كاملة لإدارة النظام
+- **موظف مطالبات (Claims Agent)**: إنشاء وإدارة المطالبات
+- **مشاهد (Viewer)**: عرض المطالبات فقط
+
+## بيانات الدخول الافتراضية
+- البريد الإلكتروني: admin@claims.com
+- كلمة المرور: admin123
+
+## التغييرات الأخيرة
+- 2025-01-17: إنشاء النظام الكامل مع جميع المميزات
+- 2025-01-17: إضافة قاعدة بيانات شركات التأمين السعودية
+- 2025-01-17: تنفيذ نظام إرسال البريد الإلكتروني
+- 2025-01-17: إنشاء واجهة إدارية شاملة
+- 2025-01-17: إصلاح مشاكل Flask-Babel وقاعدة البيانات
+
+## المهام القادمة
+- إضافة ميزات الذكاء الاصطناعي (OCR) 
+- تحسين التقارير والإحصائيات
+- إضافة API للتكامل مع الأنظمة الخارجية
+- تطوير تطبيق جوال مصاحب
+
+## ملاحظات للمطوير
+- النظام يدعم اللغة العربية بشكل أساسي مع إمكانية التبديل للإنجليزية
+- تم تصميم النظام ليكون قابلاً للتوسع والتطوير
+- جميع العمليات الحساسة محمية بنظام CSRF
+- رفع الملفات محدود بأنواع آمنة وأحجام محددة
+- النظام جاهز للنشر في بيئة الإنتاج
+
+## تعليمات التشغيل
+1. تثبيت المكتبات: تم بالفعل
+2. إعداد قاعدة البيانات: تم بالفعل
+3. تشغيل seed_data.py: تم بالفعل
+4. تشغيل التطبيق: python run.py
 
 ## User Preferences
-
-Preferred communication style: Simple, everyday language.
-
-## System Architecture
-
-The application follows a simple single-file architecture pattern:
-
-- **Language**: Python 3.6+
-- **Architecture Type**: Script-based application
-- **Email Protocol**: SMTP (Gmail)
-- **File Handling**: Local filesystem operations
-- **Security**: Environment variable-based password management
-
-## Key Components
-
-### Core Application (`email_sender.py`)
-- **Purpose**: Main script that handles file collection and email sending
-- **Key Features**:
-  - Configurable folder path for files to send
-  - Gmail SMTP integration
-  - Support for multiple file attachments
-  - Bilingual (Arabic/English) interface
-  - Secure password handling
-
-### Configuration Variables
-- `FOLDER_PATH`: Directory containing files to send (default: "./files_to_send")
-- `RECIPIENT_EMAIL`: Target email address
-- `SENDER_EMAIL`: Gmail sender address
-- `EMAIL_SUBJECT`: Email subject line
-- `EMAIL_BODY`: Email message content
-- `SMTP_SERVER`: Gmail SMTP server
-- `SMTP_PORT`: SMTP port (465 for SSL)
-
-### Security Components
-- Environment variable support for password storage
-- Gmail App Password authentication
-- SSL/TLS encryption for email transmission
-
-## Data Flow
-
-1. **File Collection**: Script scans the specified folder for files
-2. **Email Composition**: Creates multipart MIME message with attachments
-3. **Authentication**: Uses Gmail credentials (email + app password)
-4. **Transmission**: Sends email via Gmail SMTP server
-5. **Confirmation**: Provides success/failure feedback
-
-## External Dependencies
-
-### Required Python Libraries
-- `smtplib`: SMTP client for email sending
-- `email`: Email message construction and MIME handling
-- `os`: Operating system interface
-- `getpass`: Secure password input
-- `pathlib`: Modern path handling
-- `sys`: System-specific parameters
-
-### External Services
-- **Gmail SMTP**: Primary email service provider
-- **Google Account**: Required for authentication
-- **Gmail App Passwords**: Two-factor authentication requirement
-
-## Deployment Strategy
-
-### Prerequisites
-- Python 3.6 or newer
-- Gmail account with 2FA enabled
-- Gmail App Password generated
-
-### Setup Process
-1. **Gmail Configuration**:
-   - Enable 2-Factor Authentication
-   - Generate App Password
-   - Configure sender email
-
-2. **Application Configuration**:
-   - Set folder path for files
-   - Configure recipient email
-   - Set sender email address
-
-3. **Security Setup**:
-   - Store App Password in environment variable
-   - Alternative: Runtime password prompt
-
-### Execution
-- Single script execution
-- Command-line interface
-- Local file system access required
-- Internet connection required for email sending
-
-## Technical Considerations
-
-### Email Limitations
-- Gmail daily sending limits apply
-- File size restrictions (25MB per email)
-- Attachment type restrictions may apply
-
-### Error Handling
-- Password validation
-- Network connectivity checks
-- File access permissions
-- SMTP authentication errors
-
-### Localization
-- Bilingual documentation (Arabic/English)
-- Configurable email content
-- Unicode support for international characters
+- اللغة: العربية (أساسي)
+- التصميم: Bootstrap RTL
+- قاعدة البيانات: PostgreSQL
+- الأمان: مستوى عالي مع CSRF وتشفير

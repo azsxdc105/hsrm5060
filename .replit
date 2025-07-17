@@ -2,6 +2,7 @@ modules = ["python-3.11"]
 
 [nix]
 channel = "stable-24_05"
+packages = ["cargo", "freetype", "lcms2", "libiconv", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "rustc", "tcl", "tk", "zlib"]
 
 [workflows]
 runButton = "Project"
@@ -13,36 +14,13 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Email Sender"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "email_sender_test"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Email Sender GUI"
+args = "Claims Management System"
 
 [[workflows.workflow]]
-name = "Email Sender"
+name = "Claims Management System"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python email_sender.py"
-
-[[workflows.workflow]]
-name = "email_sender_test"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python email_sender.py"
-
-[[workflows.workflow]]
-name = "Email Sender GUI"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python email_sender_gui.py"
+args = "python run.py"
+waitForPort = 5000

@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}مطالبة جديدة - نظام إدارة مطالبات التأمين{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">
+                <i class="fas fa-plus me-2"></i>
+                إنشاء مطالبة جديدة
+            </h1>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-invoice me-2"></i>
+                        بيانات المطالبة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <!-- Company Selection -->
+                            <div class="col-md-6 mb-3">
+                                {{ form.company_id.label(class="form-label") }}
+                                {{ form.company_id(class="form-select") }}
+                                {% if form.company_id.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.company_id.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Client Name -->
+                            <div class="col-md-6 mb-3">
+                                {{ form.client_name.label(class="form-label") }}
+                                {{ form.client_name(class="form-control") }}
+                                {% if form.client_name.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.client_name.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- National ID -->
+                            <div class="col-md-6 mb-3">
+                                {{ form.client_national_id.label(class="form-label") }}
+                                {{ form.client_national_id(class="form-control") }}
+                                {% if form.client_national_id.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.client_national_id.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Policy Number -->
+                            <div class="col-md-6 mb-3">
+                                {{ form.policy_number.label(class="form-label") }}
+                                {{ form.policy_number(class="form-control") }}
+                                {% if form.policy_number.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.policy_number.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- Incident Number -->
+                            <div class="col-md-6 mb-3">
+                                {{ form.incident_number.label(class="form-label") }}
+                                {{ form.incident_number(class="form-control") }}
+                                {% if form.incident_number.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.incident_number.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Incident Date -->
+                            <div class="col-md-6 mb-3">
+                                {{ form.incident_date.label(class="form-label") }}
+                                {{ form.incident_date(class="form-control") }}
+                                {% if form.incident_date.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.incident_date.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- Claim Amount -->
+                            <div class="col-md-6 mb-3">
+                                {{ form.claim_amount.label(class="form-label") }}
+                                <div class="input-group">
+                                    {{ form.claim_amount(class="form-control") }}
+                                    <span class="input-group-text">ريال سعودي</span>
+                                </div>
+                                {% if form.claim_amount.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.claim_amount.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Coverage Type -->
+                            <div class="col-md-6 mb-3">
+                                {{ form.coverage_type.label(class="form-label") }}
+                                {{ form.coverage_type(class="form-select") }}
+                                {% if form.coverage_type.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.coverage_type.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- City -->
+                            <div class="col-md-6 mb-3">
+                                {{ form.city.label(class="form-label") }}
+                                {{ form.city(class="form-control") }}
+                                {% if form.city.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.city.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Tags -->
+                            <div class="col-md-6 mb-3">
+                                {{ form.tags.label(class="form-label") }}
+                                {{ form.tags(class="form-control") }}
+                                <small class="form-text text-muted">{{ form.tags.description }}</small>
+                                {% if form.tags.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.tags.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Claim Details -->
+                        <div class="mb-3">
+                            {{ form.claim_details.label(class="form-label") }}
+                            {{ form.claim_details(class="form-control", rows="4") }}
+                            {% if form.claim_details.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.claim_details.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- File Upload -->
+                        <div class="mb-3">
+                            {{ form.files.label(class="form-label") }}
+                            <div class="file-upload-area">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">اسحب وأفلت الملفات هنا أو انقر لتحديد الملفات</p>
+                                {{ form.files(class="form-control", id="files", multiple=True) }}
+                            </div>
+                            {% if form.files.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.files.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                الملفات المسموحة: PDF, JPG, PNG, DOCX (حد أقصى 25 ميجابايت لكل ملف)
+                            </small>
+                        </div>
+                        
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                حفظ المطالبة
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // File upload preview
+    document.getElementById('files').addEventListener('change', function(e) {
+        const fileList = document.createElement('div');
+        fileList.className = 'mt-3';
+        
+        for (let i = 0; i < e.target.files.length; i++) {
+            const file = e.target.files[i];
+            const fileItem = document.createElement('div');
+            fileItem.className = 'alert alert-info d-flex align-items-center';
+            fileItem.innerHTML = `
+                <i class="fas fa-file me-2"></i>
+                <span>${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+            `;
+            fileList.appendChild(fileItem);
+        }
+        
+        // Remove previous file list
+        const existingList = document.querySelector('.file-list');
+        if (existingList) {
+            existingList.remove();
+        }
+        
+        // Add new file list
+        fileList.className += ' file-list';
+        document.querySelector('.file-upload-area').appendChild(fileList);
+    });
+</script>
+{% endblock %}

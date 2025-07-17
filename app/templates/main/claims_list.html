@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}جميع المطالبات - نظام إدارة مطالبات التأمين{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3">
+                    <i class="fas fa-list me-2"></i>
+                    جميع المطالبات
+                </h1>
+                <a href="{{ url_for('claims.new_claim') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    مطالبة جديدة
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            {{ form.search_term.label(class="form-label") }}
+                            {{ form.search_term(class="form-control", placeholder="البحث في الاسم، رقم الهوية، رقم الحادث...") }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.company_id.label(class="form-label") }}
+                            {{ form.company_id(class="form-select") }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status(class="form-select") }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_from.label(class="form-label") }}
+                            {{ form.date_from(class="form-control") }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_to.label(class="form-label") }}
+                            {{ form.date_to(class="form-control") }}
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>
+                                بحث
+                            </button>
+                            <a href="{{ url_for('main.claims_list') }}" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Claims Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-table me-2"></i>
+                        قائمة المطالبات
+                        <small class="text-muted">({{ claims.total }} مطالبة)</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if claims.items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>رقم المطالبة</th>
+                                        <th>اسم العميل</th>
+                                        <th>شركة التأمين</th>
+                                        <th>المبلغ</th>
+                                        <th>تاريخ الحادث</th>
+                                        <th>الحالة</th>
+                                        <th>تاريخ الإنشاء</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for claim in claims.items %}
+                                        <tr>
+                                            <td>
+                                                <a href="{{ url_for('claims.view_claim', claim_id=claim.id) }}" class="text-decoration-none">
+                                                    {{ claim.id[:8] }}...
+                                                </a>
+                                            </td>
+                                            <td>{{ claim.client_name }}</td>
+                                            <td>{{ claim.insurance_company.name_ar }}</td>
+                                            <td>{{ claim.claim_amount }} {{ claim.currency }}</td>
+                                            <td>{{ claim.incident_date.strftime('%Y-%m-%d') }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ claim.get_status_color() }}">
+                                                    {{ claim.get_status_text_ar() }}
+                                                </span>
+                                            </td>
+                                            <td>{{ claim.created_at.strftime('%Y-%m-%d') }}</td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="{{ url_for('claims.view_claim', claim_id=claim.id) }}" 
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('claims.edit_claim', claim_id=claim.id) }}" 
+                                                       class="btn btn-sm btn-outline-secondary">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    {% if claim.status in ['draft', 'ready', 'failed'] %}
+                                                        <form method="POST" action="{{ url_for('claims.send_claim', claim_id=claim.id) }}" class="d-inline">
+                                                            <button type="submit" class="btn btn-sm btn-outline-success" 
+                                                                    onclick="return confirm('هل أنت متأكد من إرسال المطالبة؟')">
+                                                                <i class="fas fa-paper-plane"></i>
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if claims.pages > 1 %}
+                            <nav class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if claims.has_prev %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('main.claims_list', page=claims.prev_num) }}">السابق</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for page_num in claims.iter_pages() %}
+                                        {% if page_num %}
+                                            {% if page_num != claims.page %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="{{ url_for('main.claims_list', page=page_num) }}">{{ page_num }}</a>
+                                                </li>
+                                            {% else %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ page_num }}</span>
+                                                </li>
+                                            {% endif %}
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if claims.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('main.claims_list', page=claims.next_num) }}">التالي</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <h5>لا توجد مطالبات</h5>
+                            <p>لم يتم العثور على مطالبات تطابق معايير البحث</p>
+                            <a href="{{ url_for('claims.new_claim') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                إنشاء مطالبة جديدة
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit form on filter changes
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterSelects = document.querySelectorAll('select[name="company_id"], select[name="status"]');
+        const dateInputs = document.querySelectorAll('input[name="date_from"], input[name="date_to"]');
+        
+        filterSelects.forEach(select => {
+            select.addEventListener('change', function() {
+                this.form.submit();
+            });
+        });
+        
+        dateInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                this.form.submit();
+            });
+        });
+    });
+</script>
+{% endblock %}

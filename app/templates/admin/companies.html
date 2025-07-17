@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}شركات التأمين - لوحة الإدارة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3">
+                    <i class="fas fa-building me-2"></i>
+                    شركات التأمين
+                </h1>
+                <a href="{{ url_for('admin.new_company') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    شركة جديدة
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة شركات التأمين
+                        <small class="text-muted">({{ companies.total }} شركة)</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if companies.items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>الاسم العربي</th>
+                                        <th>الاسم الإنجليزي</th>
+                                        <th>البريد الإلكتروني</th>
+                                        <th>الحالة</th>
+                                        <th>عدد المطالبات</th>
+                                        <th>تاريخ الإنشاء</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for company in companies.items %}
+                                        <tr>
+                                            <td>{{ company.name_ar }}</td>
+                                            <td>{{ company.name_en }}</td>
+                                            <td>{{ company.claims_email_primary }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if company.active else 'danger' }}">
+                                                    {{ 'نشط' if company.active else 'غير نشط' }}
+                                                </span>
+                                            </td>
+                                            <td>{{ company.claims | length }}</td>
+                                            <td>{{ company.created_at.strftime('%Y-%m-%d') }}</td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="{{ url_for('admin.edit_company', company_id=company.id) }}" 
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    {% if not company.claims %}
+                                                        <form method="POST" action="{{ url_for('admin.delete_company', company_id=company.id) }}" class="d-inline">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                                    onclick="return confirm('هل أنت متأكد من حذف هذه الشركة؟')">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if companies.pages > 1 %}
+                            <nav class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if companies.has_prev %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.companies', page=companies.prev_num) }}">السابق</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for page_num in companies.iter_pages() %}
+                                        {% if page_num %}
+                                            {% if page_num != companies.page %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="{{ url_for('admin.companies', page=page_num) }}">{{ page_num }}</a>
+                                                </li>
+                                            {% else %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ page_num }}</span>
+                                                </li>
+                                            {% endif %}
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if companies.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.companies', page=companies.next_num) }}">التالي</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-building fa-3x mb-3"></i>
+                            <h5>لا توجد شركات تأمين</h5>
+                            <p>قم بإضافة شركة تأمين جديدة لبدء استخدام النظام</p>
+                            <a href="{{ url_for('admin.new_company') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                إضافة شركة تأمين
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
