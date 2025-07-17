@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}إعدادات النظام - لوحة الإدارة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">
+                <i class="fas fa-cogs me-2"></i>
+                إعدادات النظام
+            </h1>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-wrench me-2"></i>
+                        إعدادات عامة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-envelope me-2"></i>
+                                    إعدادات البريد الإلكتروني
+                                </h6>
+                                
+                                <div class="mb-3">
+                                    <label for="mail_server" class="form-label">خادم البريد</label>
+                                    <input type="text" class="form-control" name="mail_server" 
+                                           value="{{ settings.get('MAIL_SERVER', 'smtp.gmail.com') }}"
+                                           placeholder="smtp.gmail.com">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="mail_port" class="form-label">منفذ البريد</label>
+                                    <input type="number" class="form-control" name="mail_port" 
+                                           value="{{ settings.get('MAIL_PORT', '587') }}"
+                                           placeholder="587">
+                                </div>
+                                
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" name="mail_use_tls" 
+                                           {{ 'checked' if settings.get('MAIL_USE_TLS', 'True') == 'True' else '' }}>
+                                    <label class="form-check-label">استخدام TLS</label>
+                                </div>
+                                
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" name="mail_use_ssl" 
+                                           {{ 'checked' if settings.get('MAIL_USE_SSL', 'False') == 'True' else '' }}>
+                                    <label class="form-check-label">استخدام SSL</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-upload me-2"></i>
+                                    إعدادات رفع الملفات
+                                </h6>
+                                
+                                <div class="mb-3">
+                                    <label for="max_upload_mb" class="form-label">الحد الأقصى لحجم الملف (ميجابايت)</label>
+                                    <input type="number" class="form-control" name="max_upload_mb" 
+                                           value="{{ settings.get('MAX_UPLOAD_MB', '25') }}"
+                                           min="1" max="100">
+                                </div>
+                                
+                                <h6 class="text-primary mb-3 mt-4">
+                                    <i class="fas fa-robot me-2"></i>
+                                    إعدادات الذكاء الاصطناعي
+                                </h6>
+                                
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" name="ai_enabled" 
+                                           {{ 'checked' if settings.get('AI_ENABLED', 'False') == 'True' else '' }}>
+                                    <label class="form-check-label">تفعيل الذكاء الاصطناعي</label>
+                                </div>
+                                
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" name="ocr_enabled" 
+                                           {{ 'checked' if settings.get('OCR_ENABLED', 'False') == 'True' else '' }}>
+                                    <label class="form-check-label">تفعيل قراءة النصوص من الصور (OCR)</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                حفظ الإعدادات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        معلومات النظام
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>إحصائيات النظام</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>إجمالي المطالبات:</strong> {{ stats.get('total_claims', 0) }}</li>
+                                <li><strong>المطالبات المرسلة:</strong> {{ stats.get('sent_claims', 0) }}</li>
+                                <li><strong>المطالبات المدفوعة:</strong> {{ stats.get('paid_claims', 0) }}</li>
+                                <li><strong>إجمالي المستخدمين:</strong> {{ stats.get('total_users', 0) }}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>معلومات تقنية</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>إصدار النظام:</strong> 1.0.0</li>
+                                <li><strong>قاعدة البيانات:</strong> PostgreSQL</li>
+                                <li><strong>الخادم:</strong> Flask</li>
+                                <li><strong>آخر تحديث:</strong> {{ last_update }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

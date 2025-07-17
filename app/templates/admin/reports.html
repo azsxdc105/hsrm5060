@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}التقارير - لوحة الإدارة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">
+                <i class="fas fa-chart-bar me-2"></i>
+                التقارير والإحصائيات
+            </h1>
+        </div>
+    </div>
+    
+    <!-- Status Statistics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        توزيع المطالبات حسب الحالة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for status, count in status_stats %}
+                        <div class="col-md-2 col-sm-4 mb-3">
+                            <div class="text-center">
+                                <div class="h4 mb-1">{{ count }}</div>
+                                <div class="text-muted">
+                                    {% if status == 'draft' %}
+                                        مسودة
+                                    {% elif status == 'ready' %}
+                                        جاهز
+                                    {% elif status == 'sent' %}
+                                        مرسل
+                                    {% elif status == 'failed' %}
+                                        فشل
+                                    {% elif status == 'acknowledged' %}
+                                        مستلم
+                                    {% elif status == 'paid' %}
+                                        مدفوع
+                                    {% else %}
+                                        {{ status }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Company Statistics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-building me-2"></i>
+                        إحصائيات الشركات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>شركة التأمين</th>
+                                    <th>عدد المطالبات</th>
+                                    <th>إجمالي المبلغ</th>
+                                    <th>متوسط المبلغ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for company, count, total_amount in company_stats %}
+                                <tr>
+                                    <td>{{ company }}</td>
+                                    <td>{{ count }}</td>
+                                    <td>{{ "{:,.2f}".format(total_amount or 0) }} ريال</td>
+                                    <td>
+                                        {% if count > 0 and total_amount %}
+                                            {{ "{:,.2f}".format(total_amount / count) }} ريال
+                                        {% else %}
+                                            0.00 ريال
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Monthly Statistics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        الإحصائيات الشهرية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>الشهر</th>
+                                    <th>عدد المطالبات</th>
+                                    <th>إجمالي المبلغ</th>
+                                    <th>متوسط المبلغ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for month, count, total_amount in monthly_stats %}
+                                <tr>
+                                    <td>{{ month.strftime('%Y-%m') if month else 'غير محدد' }}</td>
+                                    <td>{{ count }}</td>
+                                    <td>{{ "{:,.2f}".format(total_amount or 0) }} ريال</td>
+                                    <td>
+                                        {% if count > 0 and total_amount %}
+                                            {{ "{:,.2f}".format(total_amount / count) }} ريال
+                                        {% else %}
+                                            0.00 ريال
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-download fa-2x text-primary mb-3"></i>
+                    <h6>تصدير التقرير</h6>
+                    <button class="btn btn-primary btn-sm">
+                        <i class="fas fa-file-excel me-2"></i>
+                        Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-print fa-2x text-secondary mb-3"></i>
+                    <h6>طباعة التقرير</h6>
+                    <button class="btn btn-secondary btn-sm" onclick="window.print()">
+                        <i class="fas fa-print me-2"></i>
+                        طباعة
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-sync-alt fa-2x text-success mb-3"></i>
+                    <h6>تحديث البيانات</h6>
+                    <button class="btn btn-success btn-sm" onclick="location.reload()">
+                        <i class="fas fa-sync-alt me-2"></i>
+                        تحديث
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-cog fa-2x text-warning mb-3"></i>
+                    <h6>الإعدادات</h6>
+                    <a href="{{ url_for('admin.settings') }}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-cog me-2"></i>
+                        إعدادات
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh every 30 seconds
+setInterval(function() {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}

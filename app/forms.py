@@ -72,6 +72,31 @@ class UserForm(FlaskForm):
                       ])
     active = BooleanField('نشط', default=True)
 
+class SearchForm(FlaskForm):
+    search_term = StringField('البحث', validators=[Optional()])
+    company_id = SelectField('شركة التأمين', validators=[Optional()], coerce=lambda x: int(x) if x else None)
+    status = SelectField('الحالة', validators=[Optional()], 
+                        choices=[
+                            ('', 'جميع الحالات'),
+                            ('draft', 'مسودة'),
+                            ('ready', 'جاهز'),
+                            ('sent', 'مرسل'),
+                            ('failed', 'فشل'),
+                            ('acknowledged', 'مستلم'),
+                            ('paid', 'مدفوع')
+                        ])
+    date_from = DateField('من تاريخ', validators=[Optional()])
+    date_to = DateField('إلى تاريخ', validators=[Optional()])
+    
+    def __init__(self, *args, **kwargs):
+        super(SearchForm, self).__init__(*args, **kwargs)
+        choices = [('', 'جميع الشركات')]
+        try:
+            choices.extend([(c.id, c.name_ar) for c in InsuranceCompany.query.filter_by(active=True).all()])
+        except:
+            pass  # Handle case when database is not available
+        self.company_id.choices = choices
+
 class SettingsForm(FlaskForm):
     mail_server = StringField('خادم البريد الإلكتروني', validators=[DataRequired()])
     mail_port = StringField('منفذ البريد الإلكتروني', validators=[DataRequired()])

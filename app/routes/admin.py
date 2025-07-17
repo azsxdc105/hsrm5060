@@ -53,10 +53,10 @@ def users():
     )
     return render_template('admin/users.html', users=users)
 
-@admin_bp.route('/users/new', methods=['GET', 'POST'])
+@admin_bp.route('/users/add', methods=['GET', 'POST'])
 @login_required
 @admin_required
-def new_user():
+def add_user():
     form = UserForm()
     
     if form.validate_on_submit():
@@ -73,7 +73,7 @@ def new_user():
         # Check if email already exists
         if User.query.filter_by(email=form.email.data).first():
             flash('هذا البريد الإلكتروني مسجل مسبقاً', 'error')
-            return render_template('admin/new_user.html', form=form)
+            return render_template('admin/add_user.html', form=form)
         
         db.session.add(user)
         db.session.commit()
@@ -81,7 +81,7 @@ def new_user():
         flash('تم إنشاء المستخدم بنجاح', 'success')
         return redirect(url_for('admin.users'))
     
-    return render_template('admin/new_user.html', form=form)
+    return render_template('admin/add_user.html', form=form)
 
 @admin_bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -246,7 +246,15 @@ def settings():
     form.ai_enabled.data = settings_dict.get('AI_ENABLED', 'False') == 'True'
     form.ocr_enabled.data = settings_dict.get('OCR_ENABLED', 'False') == 'True'
     
-    return render_template('admin/settings.html', form=form)
+    # Get system statistics
+    stats = {
+        'total_claims': Claim.query.count(),
+        'sent_claims': Claim.query.filter_by(status='sent').count(),
+        'paid_claims': Claim.query.filter_by(status='paid').count(),
+        'total_users': User.query.count()
+    }
+    
+    return render_template('admin/settings.html', form=form, settings=settings_dict, stats=stats, last_update=datetime.now().strftime('%Y-%m-%d %H:%M'))
 
 @admin_bp.route('/test_email', methods=['POST'])
 @login_required
@@ -302,3 +310,22 @@ def reports():
                          status_stats=status_stats,
                          company_stats=company_stats,
                          monthly_stats=monthly_stats)
+
+@admin_bp.route('/users/<int:user_id>/toggle_status', methods=['POST'])
+@login_required
+@admin_required
+def toggle_user_status(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent admin from deactivating themselves
+    if user.id == current_user.id:
+        flash('لا يمكنك تعطيل حسابك الشخصي', 'error')
+        return redirect(url_for('admin.users'))
+    
+    user.active = not user.active
+    db.session.commit()
+    
+    status = 'تم تفعيل' if user.active else 'تم تعطيل'
+    flash(f'{status} المستخدم {user.full_name} بنجاح', 'success')
+    
+    return redirect(url_for('admin.users'))
