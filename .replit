@@ -1,0 +1,48 @@
+modules = ["python-3.11"]
+
+[nix]
+channel = "stable-24_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Email Sender"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "email_sender_test"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Email Sender GUI"
+
+[[workflows.workflow]]
+name = "Email Sender"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python email_sender.py"
+
+[[workflows.workflow]]
+name = "email_sender_test"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python email_sender.py"
+
+[[workflows.workflow]]
+name = "Email Sender GUI"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python email_sender_gui.py"
