@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة الموظف - نظام إدارة مطالبات التأمين{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="card-title mb-2">
+                                <i class="fas fa-user-tie me-2"></i>
+                                مرحباً {{ current_user.full_name }}
+                            </h2>
+                            <p class="card-text mb-0">
+                                <i class="fas fa-briefcase me-2"></i>
+                                الدور: موظف مطالبات
+                            </p>
+                            <p class="card-text">
+                                <i class="fas fa-calendar me-2"></i>
+                                {{ current_date }}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-clipboard-list fa-4x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-alt fa-2x mb-2"></i>
+                    <h4>{{ stats.total_claims }}</h4>
+                    <p class="mb-0">إجمالي المطالبات</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-2x mb-2"></i>
+                    <h4>{{ stats.pending_claims }}</h4>
+                    <p class="mb-0">مطالبات معلقة</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <h4>{{ stats.approved_claims }}</h4>
+                    <p class="mb-0">مطالبات موافق عليها</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-times-circle fa-2x mb-2"></i>
+                    <h4>{{ stats.rejected_claims }}</h4>
+                    <p class="mb-0">مطالبات مرفوضة</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        إجراءات سريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('claims.new') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>
+                            إنشاء مطالبة جديدة
+                        </a>
+                        <a href="{{ url_for('claims.new_with_ocr') }}" class="btn btn-info">
+                            <i class="fas fa-camera me-2"></i>
+                            إنشاء مطالبة بـ OCR
+                        </a>
+                        <a href="{{ url_for('claims.index') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>
+                            عرض جميع المطالبات
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        إحصائيات سريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h3 class="text-primary">{{ stats.today_claims }}</h3>
+                            <p class="mb-0">مطالبات اليوم</p>
+                        </div>
+                        <div class="col-6">
+                            <h3 class="text-success">{{ stats.this_week_claims }}</h3>
+                            <p class="mb-0">مطالبات الأسبوع</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h3 class="text-info">{{ stats.companies_count }}</h3>
+                            <p class="mb-0">شركات التأمين</p>
+                        </div>
+                        <div class="col-6">
+                            <h3 class="text-warning">{{ stats.avg_processing_time }}</h3>
+                            <p class="mb-0">متوسط المعالجة (يوم)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Claims -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        المطالبات الحديثة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_claims %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>رقم المطالبة</th>
+                                        <th>اسم العميل</th>
+                                        <th>شركة التأمين</th>
+                                        <th>المبلغ</th>
+                                        <th>الحالة</th>
+                                        <th>التاريخ</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for claim in recent_claims %}
+                                        <tr>
+                                            <td>
+                                                <a href="{{ url_for('claims.view', id=claim.id) }}" class="text-decoration-none">
+                                                    {{ claim.id[:8] }}...
+                                                </a>
+                                            </td>
+                                            <td>{{ claim.client_name }}</td>
+                                            <td>{{ claim.insurance_company.name if claim.insurance_company else 'غير محدد' }}</td>
+                                            <td>{{ "{:,.0f}".format(claim.claim_amount) }} ريال</td>
+                                            <td>
+                                                <span class="badge bg-{{ claim.get_status_color() }}">
+                                                    {{ claim.get_status_text_ar() }}
+                                                </span>
+                                            </td>
+                                            <td>{{ claim.created_at.strftime('%Y-%m-%d') }}</td>
+                                            <td>
+                                                <a href="{{ url_for('claims.view', id=claim.id) }}"
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('claims.index') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-list me-2"></i>
+                                عرض جميع المطالبات
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <h5>لا توجد مطالبات حديثة</h5>
+                            <p>ابدأ بإنشاء مطالبة جديدة</p>
+                            <a href="{{ url_for('claims.new') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                إنشاء مطالبة جديدة
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh stats every 5 minutes
+setInterval(function() {
+    location.reload();
+}, 300000);
+
+// Add some interactivity
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate cards on load
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

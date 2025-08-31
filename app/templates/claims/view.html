@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+
+{% block title %}عرض المطالبة #{{ claim.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-file-alt me-2"></i>
+                    المطالبة #{{ claim.id }}
+                </h1>
+                <div>
+                    <a href="{{ url_for('claims.edit', id=claim.id) }}" class="btn btn-warning me-2">
+                        <i class="fas fa-edit me-2"></i>
+                        تعديل
+                    </a>
+                    <a href="{{ url_for('claims.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة للمطالبات
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Classification Section -->
+    {% if claim.ai_classification %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-brain me-2"></i>
+                        التصنيف الذكي
+                        {% if claim.ai_classification.manual_override %}
+                        <span class="badge bg-warning ms-2">تم التعديل يدوياً</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <h6 class="text-muted">الفئة</h6>
+                            <h5 class="text-primary">{{ claim.ai_classification.get_category_display_name() }}</h5>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h6 class="text-muted">مستوى الثقة</h6>
+                            <h5 class="text-success">{{ (claim.ai_classification.confidence * 100)|round(1) }}%</h5>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h6 class="text-muted">مستوى المخاطر</h6>
+                            <h5 class="text-{{ claim.ai_classification.get_risk_level_color() }}">
+                                {{ claim.ai_classification.get_risk_level_display_name() }}
+                            </h5>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h6 class="text-muted">احتمالية الاحتيال</h6>
+                            <h5 class="text-{{ claim.ai_classification.get_fraud_risk_color() }}">
+                                {{ (claim.ai_classification.fraud_probability * 100)|round(1) }}%
+                            </h5>
+                        </div>
+                    </div>
+
+                    {% if claim.ai_classification.suggested_amount %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-calculator me-2"></i>
+                                <strong>المبلغ المقترح:</strong> {{ "{:,.2f}".format(claim.ai_classification.suggested_amount) }} ريال
+                                <small class="text-muted">(بناءً على تحليل المطالبات المشابهة)</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <a href="{{ url_for('ai_classification.view_classification', claim_id=claim.id) }}"
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-2"></i>عرض التفاصيل الكاملة
+                            </a>
+                            {% if current_user.is_admin() and not claim.ai_classification.reviewed_by_user_id %}
+                            <a href="{{ url_for('ai_classification.review_classification', claim_id=claim.id) }}"
+                               class="btn btn-outline-warning btn-sm ms-2">
+                                <i class="fas fa-edit me-2"></i>مراجعة التصنيف
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif current_user.is_admin() %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                هذه المطالبة لم يتم تصنيفها بواسطة الذكاء الاصطناعي بعد.
+                <a href="{{ url_for('ai_classification.classify_claim', claim_id=claim.id) }}"
+                   class="btn btn-primary btn-sm ms-2">
+                    <i class="fas fa-brain me-2"></i>تصنيف الآن
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Claim Details -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        تفاصيل المطالبة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">بيانات العميل</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>الاسم:</strong></td>
+                                    <td>{{ claim.client_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>رقم الهوية:</strong></td>
+                                    <td>{{ claim.client_national_id }}</td>
+                                </tr>
+                                {% if claim.client_phone %}
+                                <tr>
+                                    <td><strong>الهاتف:</strong></td>
+                                    <td>{{ claim.client_phone }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if claim.client_email %}
+                                <tr>
+                                    <td><strong>البريد الإلكتروني:</strong></td>
+                                    <td>{{ claim.client_email }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">بيانات التأمين</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>شركة التأمين:</strong></td>
+                                    <td>
+                                        {% if claim.company %}
+                                            {{ claim.company.name_ar }}
+                                        {% else %}
+                                            <span class="text-muted">غير محدد</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>رقم الوثيقة:</strong></td>
+                                    <td>{{ claim.policy_number }}</td>
+                                </tr>
+                                {% if claim.coverage_type %}
+                                <tr>
+                                    <td><strong>نوع التغطية:</strong></td>
+                                    <td>{{ claim.coverage_type }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td><strong>مبلغ المطالبة:</strong></td>
+                                    <td><strong>{{ "{:,.2f}".format(claim.claim_amount) }} ريال</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">بيانات الحادث</h6>
+                            <table class="table table-sm">
+                                {% if claim.incident_number %}
+                                <tr>
+                                    <td><strong>رقم الحادث:</strong></td>
+                                    <td>{{ claim.incident_number }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td><strong>تاريخ الحادث:</strong></td>
+                                    <td>{{ claim.incident_date.strftime('%Y-%m-%d') if claim.incident_date else 'غير محدد' }}</td>
+                                </tr>
+                                {% if claim.city %}
+                                <tr>
+                                    <td><strong>المدينة:</strong></td>
+                                    <td>{{ claim.city }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if claim.tags %}
+                                <tr>
+                                    <td><strong>العلامات:</strong></td>
+                                    <td>
+                                        {% for tag in claim.tags.split(',') %}
+                                            <span class="badge bg-secondary me-1">{{ tag.strip() }}</span>
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">معلومات النظام</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>تاريخ الإنشاء:</strong></td>
+                                    <td>{{ claim.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                </tr>
+                                {% if claim.updated_at %}
+                                <tr>
+                                    <td><strong>آخر تحديث:</strong></td>
+                                    <td>{{ claim.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td><strong>أنشأ بواسطة:</strong></td>
+                                    <td>
+                                        {% if claim.created_by_user %}
+                                            {{ claim.created_by_user.full_name }}
+                                        {% else %}
+                                            <span class="text-muted">غير محدد</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% if claim.email_sent_at %}
+                                <tr>
+                                    <td><strong>تاريخ الإرسال:</strong></td>
+                                    <td>{{ claim.email_sent_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                    
+                    {% if claim.claim_details %}
+                    <hr>
+                    <h6 class="text-primary mb-3">تفاصيل الحادث</h6>
+                    <div class="bg-light p-3 rounded">
+                        {{ claim.claim_details|nl2br }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Attachments -->
+            {% if claim.attachments %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-paperclip me-2"></i>
+                        المرفقات
+                        <span class="badge bg-primary ms-2">{{ claim.attachments|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for attachment in claim.attachments %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title mb-1">{{ attachment.original_filename }}</h6>
+                                            <small class="text-muted">
+                                                {{ (attachment.file_size / 1024 / 1024)|round(2) }} MB
+                                            </small>
+                                        </div>
+                                        <div>
+                                            <a href="{{ url_for('claims.download_attachment', claim_id=claim.id, attachment_id=attachment.id) }}" 
+                                               class="btn btn-sm btn-outline-primary me-1" title="تحميل">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                            <form method="POST" action="{{ url_for('claims.delete_attachment', claim_id=claim.id, attachment_id=attachment.id) }}" 
+                                                  class="d-inline">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                        title="حذف" onclick="return confirm('هل تريد حذف هذا المرفق؟')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if claim.attachments|length > 1 %}
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('claims.download_all_attachments', claim_id=claim.id) }}" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-download me-2"></i>
+                            تحميل جميع المرفقات
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Status and Actions -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tasks me-2"></i>
+                        الحالة والإجراءات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Current Status -->
+                    <div class="mb-3">
+                        <label class="form-label">الحالة الحالية:</label>
+                        <div>
+                            {% set status_colors = {
+                                'draft': 'secondary',
+                                'ready': 'info',
+                                'sent': 'primary',
+                                'acknowledged': 'warning',
+                                'paid': 'success',
+                                'failed': 'danger'
+                            } %}
+                            {% set status_names = {
+                                'draft': 'مسودة',
+                                'ready': 'جاهز',
+                                'sent': 'مرسل',
+                                'acknowledged': 'مستلم',
+                                'paid': 'مدفوع',
+                                'failed': 'فشل'
+                            } %}
+                            <span class="badge bg-{{ status_colors.get(claim.status, 'secondary') }} fs-6">
+                                {{ status_names.get(claim.status, claim.status) }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Status Update Form -->
+                    <form method="POST" action="{{ url_for('claims.update_claim_status', claim_id=claim.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="mb-3">
+                            <label for="status" class="form-label">تغيير الحالة:</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="draft" {{ 'selected' if claim.status == 'draft' }}>مسودة</option>
+                                <option value="ready" {{ 'selected' if claim.status == 'ready' }}>جاهز</option>
+                                <option value="sent" {{ 'selected' if claim.status == 'sent' }}>مرسل</option>
+                                <option value="acknowledged" {{ 'selected' if claim.status == 'acknowledged' }}>مستلم</option>
+                                <option value="paid" {{ 'selected' if claim.status == 'paid' }}>مدفوع</option>
+                                <option value="failed" {{ 'selected' if claim.status == 'failed' }}>فشل</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            <i class="fas fa-save me-2"></i>
+                            تحديث الحالة
+                        </button>
+                    </form>
+
+                    <hr>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2">
+                        {% if claim.status in ['draft', 'ready', 'failed'] %}
+                        <form method="POST" action="{{ url_for('claims.send', id=claim.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn btn-success w-100" 
+                                    onclick="return confirm('هل تريد إرسال هذه المطالبة؟')">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                إرسال المطالبة
+                            </button>
+                        </form>
+                        {% elif claim.status == 'sent' %}
+                        <form method="POST" action="{{ url_for('claims.send', id=claim.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn btn-warning w-100" 
+                                    onclick="return confirm('هل تريد إعادة إرسال هذه المطالبة؟')">
+                                <i class="fas fa-redo me-2"></i>
+                                إعادة إرسال
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        <a href="{{ url_for('claims.edit', id=claim.id) }}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-edit me-2"></i>
+                            تعديل المطالبة
+                        </a>
+
+                        <form method="POST" action="{{ url_for('claims.delete', id=claim.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn btn-outline-danger w-100" 
+                                    onclick="return confirm('هل أنت متأكد من حذف هذه المطالبة؟ هذا الإجراء لا يمكن التراجع عنه.')">
+                                <i class="fas fa-trash me-2"></i>
+                                حذف المطالبة
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        إحصائيات سريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h4 class="text-primary mb-0">{{ claim.attachments|length }}</h4>
+                                <small class="text-muted">مرفقات</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success mb-0">
+                                {{ "{:,.0f}".format(claim.claim_amount) }}
+                            </h4>
+                            <small class="text-muted">ريال</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}سجل التدقيق - لوحة الإدارة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    سجل التدقيق
+                </h1>
+                <div>
+                    <span class="badge bg-info">{{ logs.total }} سجل</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        فلترة السجلات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-2">
+                            <label class="form-label">العملية</label>
+                            <select name="action" class="form-select">
+                                <option value="">الكل</option>
+                                {% for action in actions %}
+                                    <option value="{{ action }}" {% if current_filters.action == action %}selected{% endif %}>
+                                        {{ action }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">نوع المورد</label>
+                            <select name="resource_type" class="form-select">
+                                <option value="">الكل</option>
+                                {% for rt in resource_types %}
+                                    <option value="{{ rt }}" {% if current_filters.resource_type == rt %}selected{% endif %}>
+                                        {{ rt }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">المستخدم</label>
+                            <select name="user_id" class="form-select">
+                                <option value="">الكل</option>
+                                {% for user in users %}
+                                    <option value="{{ user.id }}" {% if current_filters.user_id == user.id %}selected{% endif %}>
+                                        {{ user.full_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">من تاريخ</label>
+                            <input type="date" name="date_from" class="form-control" value="{{ current_filters.date_from }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">إلى تاريخ</label>
+                            <input type="date" name="date_to" class="form-control" value="{{ current_filters.date_to }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>فلترة
+                                </button>
+                                <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-outline-secondary ms-1">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audit Logs Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        سجلات التدقيق
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if logs.items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>التوقيت</th>
+                                        <th>المستخدم</th>
+                                        <th>العملية</th>
+                                        <th>نوع المورد</th>
+                                        <th>معرف المورد</th>
+                                        <th>عنوان IP</th>
+                                        <th>التفاصيل</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for log in logs.items %}
+                                        <tr>
+                                            <td>
+                                                <small>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                                            </td>
+                                            <td>
+                                                {% if log.user %}
+                                                    <span class="badge bg-primary">{{ log.user.full_name }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">System</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{% if log.action in ['CREATE', 'LOGIN_SUCCESS'] %}success{% elif log.action in ['DELETE', 'LOGIN_FAILED'] %}danger{% elif log.action in ['UPDATE', 'STATUS_CHANGE'] %}warning{% else %}info{% endif %}">
+                                                    {{ log.action }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <code>{{ log.resource_type }}</code>
+                                            </td>
+                                            <td>
+                                                {% if log.resource_id %}
+                                                    <small>{{ log.resource_id[:20] }}{% if log.resource_id|length > 20 %}...{% endif %}</small>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if log.ip_address %}
+                                                    <small>{{ log.ip_address }}</small>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if log.details %}
+                                                    <small>{{ log.details[:50] }}{% if log.details|length > 50 %}...{% endif %}</small>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-outline-info" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#logModal{{ log.id }}">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- Log Details Modal -->
+                                        <div class="modal fade" id="logModal{{ log.id }}" tabindex="-1">
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">تفاصيل سجل التدقيق #{{ log.id }}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <strong>التوقيت:</strong><br>
+                                                                {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <strong>المستخدم:</strong><br>
+                                                                {{ log.user.full_name if log.user else 'System' }}
+                                                            </div>
+                                                        </div>
+                                                        <hr>
+                                                        <div class="row">
+                                                            <div class="col-md-4">
+                                                                <strong>العملية:</strong><br>
+                                                                <span class="badge bg-info">{{ log.action }}</span>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <strong>نوع المورد:</strong><br>
+                                                                <code>{{ log.resource_type }}</code>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <strong>معرف المورد:</strong><br>
+                                                                {{ log.resource_id or '-' }}
+                                                            </div>
+                                                        </div>
+                                                        <hr>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <strong>عنوان IP:</strong><br>
+                                                                {{ log.ip_address or '-' }}
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <strong>متصفح المستخدم:</strong><br>
+                                                                <small>{{ log.user_agent[:100] if log.user_agent else '-' }}</small>
+                                                            </div>
+                                                        </div>
+                                                        {% if log.details %}
+                                                        <hr>
+                                                        <div>
+                                                            <strong>التفاصيل:</strong><br>
+                                                            <div class="bg-light p-2 rounded">
+                                                                {{ log.details }}
+                                                            </div>
+                                                        </div>
+                                                        {% endif %}
+                                                        {% if log.old_values or log.new_values %}
+                                                        <hr>
+                                                        <div class="row">
+                                                            {% if log.old_values %}
+                                                            <div class="col-md-6">
+                                                                <strong>القيم القديمة:</strong>
+                                                                <pre class="bg-light p-2 rounded"><code>{{ log.old_values }}</code></pre>
+                                                            </div>
+                                                            {% endif %}
+                                                            {% if log.new_values %}
+                                                            <div class="col-md-6">
+                                                                <strong>القيم الجديدة:</strong>
+                                                                <pre class="bg-light p-2 rounded"><code>{{ log.new_values }}</code></pre>
+                                                            </div>
+                                                            {% endif %}
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if logs.pages > 1 %}
+                            <nav class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if logs.has_prev %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.audit_logs', page=logs.prev_num, **current_filters) }}">السابق</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for page_num in logs.iter_pages() %}
+                                        {% if page_num %}
+                                            {% if page_num != logs.page %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="{{ url_for('admin.audit_logs', page=page_num, **current_filters) }}">{{ page_num }}</a>
+                                                </li>
+                                            {% else %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ page_num }}</span>
+                                                </li>
+                                            {% endif %}
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if logs.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.audit_logs', page=logs.next_num, **current_filters) }}">التالي</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-history fa-3x mb-3"></i>
+                            <h5>لا توجد سجلات</h5>
+                            <p>لم يتم العثور على سجلات تدقيق تطابق معايير البحث</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit form on filter changes
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterSelects = document.querySelectorAll('select[name="action"], select[name="resource_type"], select[name="user_id"]');
+        const dateInputs = document.querySelectorAll('input[name="date_from"], input[name="date_to"]');
+        
+        filterSelects.forEach(select => {
+            select.addEventListener('change', function() {
+                this.form.submit();
+            });
+        });
+        
+        dateInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                this.form.submit();
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,448 @@
+{% extends "base.html" %}
+
+{% block title %}مطالبة جديدة مع الذكاء الاصطناعي{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-robot me-2"></i>
+                    مطالبة جديدة مع الذكاء الاصطناعي
+                </h1>
+                <a href="{{ url_for('claims.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    العودة للمطالبات
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- File Upload Section -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-upload me-2"></i>
+                        رفع الملفات والصور
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        ارفع صور الحادث والوثائق وسيقوم النظام باستخراج البيانات تلقائياً
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="files" class="form-label">اختر الملفات</label>
+                        <input type="file" class="form-control" id="files" multiple 
+                               accept="image/*,.pdf" onchange="handleFileUpload(this)">
+                        <div class="form-text">
+                            يمكنك رفع صور (JPG, PNG) أو ملفات PDF
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div id="upload-progress" class="mb-3" style="display: none;">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%">
+                                <span class="progress-text">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- File Preview -->
+                    <div id="file-preview" class="row"></div>
+                    
+                    <!-- OCR Results -->
+                    <div id="ocr-results" class="mt-3" style="display: none;">
+                        <h6 class="text-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            تم استخراج البيانات بنجاح!
+                        </h6>
+                        <div class="alert alert-success">
+                            <div id="extracted-data"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Claim Form Section -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        بيانات المطالبة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="claim-form" method="POST" action="{{ url_for('claims.create_with_ocr') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <!-- Client Information -->
+                        <h6 class="text-primary mb-3">
+                            <i class="fas fa-user me-2"></i>
+                            بيانات العميل
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="client_name" class="form-label">اسم العميل</label>
+                                <input type="text" class="form-control" id="client_name" name="client_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="client_national_id" class="form-label">رقم الهوية</label>
+                                <input type="text" class="form-control" id="client_national_id" name="client_national_id" 
+                                       pattern="[0-9]{10}" maxlength="10" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="client_phone" class="form-label">رقم الهاتف</label>
+                                <input type="tel" class="form-control" id="client_phone" name="client_phone" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="client_email" class="form-label">البريد الإلكتروني</label>
+                                <input type="email" class="form-control" id="client_email" name="client_email">
+                            </div>
+                        </div>
+
+                        <!-- Incident Information -->
+                        <h6 class="text-primary mb-3 mt-4">
+                            <i class="fas fa-car-crash me-2"></i>
+                            بيانات الحادث
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="incident_date" class="form-label">تاريخ الحادث</label>
+                                <input type="date" class="form-control" id="incident_date" name="incident_date" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="incident_location" class="form-label">مكان الحادث</label>
+                                <input type="text" class="form-control" id="incident_location" name="incident_location" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="incident_description" class="form-label">وصف الحادث</label>
+                            <textarea class="form-control" id="incident_description" name="incident_description" 
+                                      rows="3" required></textarea>
+                        </div>
+
+                        <!-- Insurance Information -->
+                        <h6 class="text-primary mb-3 mt-4">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            بيانات التأمين
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="company_id" class="form-label">شركة التأمين</label>
+                                <select class="form-select" id="company_id" name="company_id" required>
+                                    <option value="">اختر شركة التأمين</option>
+                                    {% for company in companies %}
+                                        <option value="{{ company.id }}">{{ company.name_ar }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="policy_number" class="form-label">رقم الوثيقة</label>
+                                <input type="text" class="form-control" id="policy_number" name="policy_number" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="claim_amount" class="form-label">مبلغ المطالبة</label>
+                                <input type="number" class="form-control" id="claim_amount" name="claim_amount" 
+                                       step="0.01" min="0" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="currency" class="form-label">العملة</label>
+                                <select class="form-select" id="currency" name="currency" required>
+                                    <option value="SAR">ريال سعودي</option>
+                                    <option value="USD">دولار أمريكي</option>
+                                    <option value="EUR">يورو</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Hidden field for uploaded files -->
+                        <input type="hidden" id="uploaded_files" name="uploaded_files" value="">
+                        
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearForm()">
+                                <i class="fas fa-eraser me-2"></i>
+                                مسح النموذج
+                            </button>
+                            <div>
+                                <button type="submit" name="action" value="draft" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-save me-2"></i>
+                                    حفظ كمسودة
+                                </button>
+                                <button type="submit" name="action" value="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-2"></i>
+                                    إرسال المطالبة
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="processingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">جاري المعالجة...</span>
+                </div>
+                <h5>جاري معالجة الملفات...</h5>
+                <p class="text-muted">يرجى الانتظار بينما نستخرج البيانات من الملفات</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let uploadedFiles = [];
+
+function handleFileUpload(input) {
+    const files = Array.from(input.files);
+    if (files.length === 0) return;
+    
+    // Show processing modal
+    const modal = new bootstrap.Modal(document.getElementById('processingModal'));
+    modal.show();
+    
+    // Show progress bar
+    const progressContainer = document.getElementById('upload-progress');
+    const progressBar = progressContainer.querySelector('.progress-bar');
+    const progressText = progressContainer.querySelector('.progress-text');
+    progressContainer.style.display = 'block';
+    
+    // Process files
+    processFiles(files).then(results => {
+        modal.hide();
+        displayResults(results);
+        updateProgress(100);
+    }).catch(error => {
+        modal.hide();
+        console.error('Error processing files:', error);
+        alert('حدث خطأ في معالجة الملفات');
+    });
+}
+
+async function processFiles(files) {
+    const formData = new FormData();
+    files.forEach(file => {
+        formData.append('files', file);
+    });
+    
+    try {
+        const response = await fetch('/api/ocr/process', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+}
+
+function displayResults(results) {
+    const previewContainer = document.getElementById('file-preview');
+    const ocrResults = document.getElementById('ocr-results');
+    const extractedData = document.getElementById('extracted-data');
+    
+    // Clear previous results
+    previewContainer.innerHTML = '';
+    extractedData.innerHTML = '';
+    
+    if (results.success && results.data) {
+        // Show OCR results
+        ocrResults.style.display = 'block';
+        
+        // Fill form with extracted data
+        fillFormWithExtractedData(results.data);
+        
+        // Display extracted data summary
+        let dataHtml = '<ul class="list-unstyled mb-0">';
+        Object.entries(results.data).forEach(([key, value]) => {
+            if (value) {
+                dataHtml += `<li><strong>${getFieldLabel(key)}:</strong> ${value}</li>`;
+            }
+        });
+        dataHtml += '</ul>';
+        extractedData.innerHTML = dataHtml;
+        
+        // Store uploaded files info
+        uploadedFiles = results.files || [];
+        document.getElementById('uploaded_files').value = JSON.stringify(uploadedFiles);
+    }
+    
+    // Display file previews
+    if (results.files) {
+        results.files.forEach(file => {
+            const fileDiv = document.createElement('div');
+            fileDiv.className = 'col-md-6 mb-3';
+            fileDiv.innerHTML = `
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-file-image fa-2x text-primary mb-2"></i>
+                        <h6 class="card-title">${file.original_name}</h6>
+                        <small class="text-muted">${formatFileSize(file.size)}</small>
+                    </div>
+                </div>
+            `;
+            previewContainer.appendChild(fileDiv);
+        });
+    }
+}
+
+function fillFormWithExtractedData(data) {
+    // Fill form fields with extracted data
+    Object.entries(data).forEach(([key, value]) => {
+        const field = document.getElementById(key);
+        if (field && value) {
+            field.value = value;
+            field.classList.add('is-valid');
+        }
+    });
+}
+
+function getFieldLabel(fieldName) {
+    const labels = {
+        'client_name': 'اسم العميل',
+        'client_national_id': 'رقم الهوية',
+        'client_phone': 'رقم الهاتف',
+        'policy_number': 'رقم الوثيقة',
+        'incident_date': 'تاريخ الحادث',
+        'incident_location': 'مكان الحادث',
+        'claim_amount': 'مبلغ المطالبة'
+    };
+    return labels[fieldName] || fieldName;
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function updateProgress(percentage) {
+    const progressBar = document.querySelector('#upload-progress .progress-bar');
+    const progressText = document.querySelector('#upload-progress .progress-text');
+    
+    progressBar.style.width = percentage + '%';
+    progressText.textContent = percentage + '%';
+    
+    if (percentage >= 100) {
+        progressBar.classList.remove('progress-bar-animated');
+        progressBar.classList.add('bg-success');
+        progressText.textContent = 'مكتمل';
+    }
+}
+
+function clearForm() {
+    if (confirm('هل أنت متأكد من مسح جميع البيانات؟')) {
+        document.getElementById('claim-form').reset();
+        document.getElementById('file-preview').innerHTML = '';
+        document.getElementById('ocr-results').style.display = 'none';
+        document.getElementById('upload-progress').style.display = 'none';
+        document.getElementById('files').value = '';
+        uploadedFiles = [];
+        
+        // Remove validation classes
+        document.querySelectorAll('.is-valid, .is-invalid').forEach(el => {
+            el.classList.remove('is-valid', 'is-invalid');
+        });
+    }
+}
+
+// Auto-save functionality
+let autoSaveTimer;
+document.getElementById('claim-form').addEventListener('input', function() {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(autoSave, 30000); // Auto-save after 30 seconds of inactivity
+});
+
+function autoSave() {
+    const formData = new FormData(document.getElementById('claim-form'));
+    formData.append('action', 'auto_save');
+    
+    fetch('/api/claims/auto-save', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    }).then(response => {
+        if (response.ok) {
+            showToast('تم الحفظ التلقائي', 'success');
+        }
+    }).catch(error => {
+        console.error('Auto-save error:', error);
+    });
+}
+
+function showToast(message, type = 'info') {
+    // Create toast notification
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    // Add to toast container
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container position-fixed top-0 end-0 p-3';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+    }
+    
+    container.appendChild(toast);
+    
+    // Show toast
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    // Remove after hiding
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+    });
+}
+</script>
+{% endblock %}

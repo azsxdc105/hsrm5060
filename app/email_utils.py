@@ -181,3 +181,69 @@ def test_email_configuration():
         return True, "تم اختبار البريد الإلكتروني بنجاح"
     except Exception as e:
         return False, f"خطأ في اختبار البريد الإلكتروني: {str(e)}"
+
+def test_email_configuration(config, test_email):
+    """
+    Test email configuration with custom settings
+    """
+    try:
+        # Temporarily update Flask-Mail configuration
+        current_app.config.update({
+            'MAIL_SERVER': config['MAIL_SERVER'],
+            'MAIL_PORT': config['MAIL_PORT'],
+            'MAIL_USE_TLS': config['MAIL_USE_TLS'],
+            'MAIL_USE_SSL': config['MAIL_USE_SSL'],
+            'MAIL_USERNAME': config['MAIL_USERNAME'],
+            'MAIL_PASSWORD': config['MAIL_PASSWORD'],
+            'MAIL_DEFAULT_SENDER': config['MAIL_DEFAULT_SENDER']
+        })
+
+        # Reinitialize mail with new config
+        mail.init_app(current_app)
+
+        # Create test message
+        msg = Message(
+            subject='اختبار إعدادات البريد الإلكتروني - نظام إدارة المطالبات',
+            recipients=[test_email],
+            sender=config['MAIL_DEFAULT_SENDER']
+        )
+
+        msg.html = f"""
+        <html>
+        <body dir="rtl" style="font-family: Arial, sans-serif;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #2c3e50;">🎉 اختبار البريد الإلكتروني</h2>
+                <p>مرحباً،</p>
+                <p>هذا بريد اختبار من نظام إدارة مطالبات التأمين.</p>
+                <div style="background-color: #d4edda; padding: 15px; border-radius: 5px; border-left: 4px solid #28a745;">
+                    <p style="margin: 0; color: #155724;">
+                        <strong>✅ تهانينا!</strong> إعدادات البريد الإلكتروني تعمل بشكل صحيح.
+                    </p>
+                </div>
+                <hr style="margin: 20px 0;">
+                <p><strong>تفاصيل الاختبار:</strong></p>
+                <ul>
+                    <li>التاريخ والوقت: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>
+                    <li>الخادم: {config['MAIL_SERVER']}</li>
+                    <li>المنفذ: {config['MAIL_PORT']}</li>
+                </ul>
+                <p style="color: #6c757d; font-size: 12px; margin-top: 30px;">
+                    تم إرسال هذا البريد تلقائياً من نظام إدارة مطالبات التأمين
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+
+        # Send test email
+        mail.send(msg)
+
+        # Log successful test
+        log_email_send(test_email, 'اختبار إعدادات البريد', 'sent', 'تم إرسال بريد الاختبار بنجاح')
+
+        return True
+
+    except Exception as e:
+        # Log failed test
+        log_email_send(test_email, 'اختبار إعدادات البريد', 'failed', str(e))
+        return False

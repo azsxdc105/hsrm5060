@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}اختبار ميزة OCR{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-eye me-2"></i>
+                    اختبار ميزة OCR
+                </h1>
+                <a href="{{ url_for('admin.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    العودة للوحة الإدارة
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- OCR Status Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        حالة نظام OCR
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="ocr-status-loading" class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">جاري التحميل...</span>
+                        </div>
+                        <p class="mt-2">جاري فحص حالة OCR...</p>
+                    </div>
+                    <div id="ocr-status-content" style="display: none;">
+                        <!-- Status will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OCR Test Card -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-vial me-2"></i>
+                        اختبار استخراج البيانات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <button id="test-ocr-btn" class="btn btn-primary">
+                        <i class="fas fa-play me-2"></i>
+                        تشغيل اختبار OCR
+                    </button>
+                    
+                    <div id="test-results" class="mt-4" style="display: none;">
+                        <h6>نتائج الاختبار:</h6>
+                        <div id="test-output"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-upload me-2"></i>
+                        اختبار رفع ملف
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="file-upload-form" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="test-file" class="form-label">اختر ملف للاختبار</label>
+                            <input type="file" class="form-control" id="test-file" accept=".jpg,.jpeg,.png,.pdf">
+                            <div class="form-text">الملفات المدعومة: JPG, PNG, PDF</div>
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-upload me-2"></i>
+                            رفع واختبار الملف
+                        </button>
+                    </form>
+                    
+                    <div id="file-results" class="mt-4" style="display: none;">
+                        <h6>نتائج معالجة الملف:</h6>
+                        <div id="file-output"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sample Text Card -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-alt me-2"></i>
+                        نص تجريبي للاختبار
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6>النص التجريبي المستخدم في الاختبار:</h6>
+                        <pre class="mb-0" style="white-space: pre-wrap; font-family: 'Arial', sans-serif;">تقرير حادث مروري
+رقم الحادث: ACC-2025-001
+التاريخ: 2025-01-21
+اسم المؤمن له: محمد أحمد السعيد
+رقم الهوية: 1234567890
+رقم الوثيقة: POL-2025-12345
+مبلغ الضرر: 25000 ريال سعودي
+نوع التغطية: شامل
+المدينة: الرياض</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Load OCR status on page load
+    loadOCRStatus();
+    
+    // Test OCR button click
+    $('#test-ocr-btn').click(function() {
+        testOCR();
+    });
+    
+    // File upload form submit
+    $('#file-upload-form').submit(function(e) {
+        e.preventDefault();
+        testFileUpload();
+    });
+});
+
+function loadOCRStatus() {
+    $.ajax({
+        url: '/claims/api/ocr/status',
+        method: 'GET',
+        success: function(response) {
+            $('#ocr-status-loading').hide();
+            $('#ocr-status-content').show();
+            
+            if (response.success) {
+                let statusHtml = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>الحالة العامة:</h6>
+                            <span class="badge ${response.available ? 'bg-success' : 'bg-danger'}">
+                                ${response.available ? 'متاح' : 'غير متاح'}
+                            </span>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>مفعل في الإعدادات:</h6>
+                            <span class="badge ${response.enabled ? 'bg-success' : 'bg-warning'}">
+                                ${response.enabled ? 'مفعل' : 'غير مفعل'}
+                            </span>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6>محركات OCR المتاحة:</h6>
+                    <ul class="list-unstyled">
+                `;
+                
+                if (response.status.engines && response.status.engines.length > 0) {
+                    response.status.engines.forEach(function(engine) {
+                        let engineName = engine === 'google_vision' ? 'Google Vision API' : 
+                                       engine === 'tesseract' ? 'Tesseract OCR' : 
+                                       engine === 'pattern_matching' ? 'Pattern Matching (Fallback)' : engine;
+                        statusHtml += `<li><i class="fas fa-check text-success me-2"></i>${engineName}</li>`;
+                    });
+                } else {
+                    statusHtml += '<li><i class="fas fa-times text-danger me-2"></i>لا توجد محركات متاحة</li>';
+                }
+                
+                statusHtml += '</ul>';
+                
+                $('#ocr-status-content').html(statusHtml);
+            } else {
+                $('#ocr-status-content').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        خطأ في تحميل حالة OCR: ${response.error}
+                    </div>
+                `);
+            }
+        },
+        error: function() {
+            $('#ocr-status-loading').hide();
+            $('#ocr-status-content').show().html(`
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    فشل في الاتصال بخدمة OCR
+                </div>
+            `);
+        }
+    });
+}
+
+function testOCR() {
+    $('#test-ocr-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>جاري الاختبار...');
+    
+    $.ajax({
+        url: '/claims/api/ocr/test',
+        method: 'POST',
+        success: function(response) {
+            $('#test-results').show();
+            
+            if (response.success) {
+                let resultHtml = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check me-2"></i>
+                        تم اختبار OCR بنجاح!
+                    </div>
+                    <h6>البيانات المستخرجة:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                `;
+                
+                if (response.test_result.success && response.test_result.data) {
+                    Object.keys(response.test_result.data).forEach(function(key) {
+                        if (response.test_result.data[key]) {
+                            let arabicKey = key === 'client_name' ? 'اسم العميل' :
+                                          key === 'client_national_id' ? 'رقم الهوية' :
+                                          key === 'policy_number' ? 'رقم الوثيقة' :
+                                          key === 'incident_number' ? 'رقم الحادث' :
+                                          key === 'confidence' ? 'مستوى الثقة' : key;
+                            
+                            let value = key === 'confidence' ? response.test_result.data[key] + '%' : response.test_result.data[key];
+                            resultHtml += `<tr><td><strong>${arabicKey}:</strong></td><td>${value}</td></tr>`;
+                        }
+                    });
+                }
+                
+                resultHtml += '</table></div>';
+                $('#test-output').html(resultHtml);
+            } else {
+                $('#test-output').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times me-2"></i>
+                        فشل اختبار OCR: ${response.error}
+                    </div>
+                `);
+            }
+        },
+        error: function() {
+            $('#test-results').show();
+            $('#test-output').html(`
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    خطأ في الاتصال بخدمة الاختبار
+                </div>
+            `);
+        },
+        complete: function() {
+            $('#test-ocr-btn').prop('disabled', false).html('<i class="fas fa-play me-2"></i>تشغيل اختبار OCR');
+        }
+    });
+}
+
+function testFileUpload() {
+    const fileInput = document.getElementById('test-file');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('يرجى اختيار ملف أولاً');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    $.ajax({
+        url: '/claims/api/extract-data',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            $('#file-results').show();
+            
+            if (response.success) {
+                let resultHtml = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check me-2"></i>
+                        تم معالجة الملف بنجاح!
+                    </div>
+                    <p><strong>مستوى الثقة:</strong> ${(response.confidence * 100).toFixed(1)}%</p>
+                    <p><strong>الطريقة المستخدمة:</strong> ${response.method}</p>
+                `;
+                
+                if (response.data) {
+                    resultHtml += '<h6>البيانات المستخرجة:</h6><pre>' + JSON.stringify(response.data, null, 2) + '</pre>';
+                }
+                
+                $('#file-output').html(resultHtml);
+            } else {
+                $('#file-output').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times me-2"></i>
+                        فشل في معالجة الملف: ${response.error}
+                    </div>
+                `);
+            }
+        },
+        error: function() {
+            $('#file-results').show();
+            $('#file-output').html(`
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    خطأ في رفع الملف
+                </div>
+            `);
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,184 @@
+[
+  {
+    "test": "Server Connectivity",
+    "success": true,
+    "message": "Server is accessible",
+    "details": "",
+    "timestamp": "2025-07-22T08:32:59.884188"
+  },
+  {
+    "test": "File Structure",
+    "success": true,
+    "message": "All important files present",
+    "details": "",
+    "timestamp": "2025-07-22T08:32:59.885183"
+  },
+  {
+    "test": "Database Connection",
+    "success": true,
+    "message": "Database accessible",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.083438"
+  },
+  {
+    "test": "Database Data",
+    "success": true,
+    "message": "Users: 4, Companies: 18, Claims: 2",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.083438"
+  },
+  {
+    "test": "Admin User Exists",
+    "success": true,
+    "message": "Admin user found",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.087436"
+  },
+  {
+    "test": "Page: Home Page",
+    "success": true,
+    "message": "Accessible (200)",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.108439"
+  },
+  {
+    "test": "Page: Dashboard",
+    "success": true,
+    "message": "Accessible (200)",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.144436"
+  },
+  {
+    "test": "Page: Claims List",
+    "success": true,
+    "message": "Accessible (200)",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.181436"
+  },
+  {
+    "test": "Page: New Claim",
+    "success": true,
+    "message": "Accessible (200)",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.200435"
+  },
+  {
+    "test": "Page: Admin Panel",
+    "success": true,
+    "message": "Accessible (200)",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.226440"
+  },
+  {
+    "test": "Page: User Management",
+    "success": true,
+    "message": "Accessible (200)",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.251434"
+  },
+  {
+    "test": "Page: Company Management",
+    "success": true,
+    "message": "Accessible (200)",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.266435"
+  },
+  {
+    "test": "Page: System Settings",
+    "success": true,
+    "message": "Accessible (200)",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.312434"
+  },
+  {
+    "test": "Page: Advanced Features",
+    "success": true,
+    "message": "Accessible (200)",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.326435"
+  },
+  {
+    "test": "Page: AI Classification",
+    "success": true,
+    "message": "Accessible (200)",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.347435"
+  },
+  {
+    "test": "Page: Advanced Notifications",
+    "success": true,
+    "message": "Accessible (200)",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.371435"
+  },
+  {
+    "test": "Page: Notification Settings",
+    "success": true,
+    "message": "Accessible (200)",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.393436"
+  },
+  {
+    "test": "Page: Send Notification",
+    "success": true,
+    "message": "Accessible (200)",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.409442"
+  },
+  {
+    "test": "Page: Notification Templates",
+    "success": true,
+    "message": "Accessible (200)",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.428436"
+  },
+  {
+    "test": "Overall Page Accessibility",
+    "success": true,
+    "message": "14/14 pages accessible (100.0%)",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.428436"
+  },
+  {
+    "test": "API: AI Classification Statistics",
+    "success": true,
+    "message": "Status: 200",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.445435"
+  },
+  {
+    "test": "API: Notifications Statistics",
+    "success": true,
+    "message": "Status: 200",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.463435"
+  },
+  {
+    "test": "API: Unread Count API",
+    "success": true,
+    "message": "Status: 200",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.481434"
+  },
+  {
+    "test": "AI Classification",
+    "success": true,
+    "message": "Category: vehicle_accident, Confidence: 0.14",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.601432"
+  },
+  {
+    "test": "Notification Creation",
+    "success": true,
+    "message": "Test notification created",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.678436"
+  },
+  {
+    "test": "Notification Templates",
+    "success": true,
+    "message": "3 templates available",
+    "details": "",
+    "timestamp": "2025-07-22T08:33:04.683431"
+  }
+]

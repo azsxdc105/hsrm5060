@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة المدفوعات - نظام إدارة مطالبات التأمين{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-money-bill-wave me-2"></i>
+                    إدارة المدفوعات
+                </h1>
+                <a href="{{ url_for('payments.create_payment') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    إنشاء مدفوعة جديدة
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ stats.total_payments }}</h4>
+                            <p class="mb-0">إجمالي المدفوعات</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-list fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ "{:,.0f}".format(stats.total_amount) }}</h4>
+                            <p class="mb-0">إجمالي المبالغ المدفوعة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-dollar-sign fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ stats.pending_payments }}</h4>
+                            <p class="mb-0">مدفوعات معلقة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ "{:,.0f}".format(stats.pending_amount) }}</h4>
+                            <p class="mb-0">مبالغ معلقة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-hourglass-half fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-search me-2"></i>
+                        البحث والتصفية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            {{ form.claim_id(class="form-control", placeholder="رقم المطالبة") }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.payment_method(class="form-select") }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.status(class="form-select") }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_from(class="form-control") }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_to(class="form-control") }}
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payments Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-table me-2"></i>
+                        قائمة المدفوعات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if payments.items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>رقم المدفوعة</th>
+                                        <th>المطالبة</th>
+                                        <th>المبلغ</th>
+                                        <th>طريقة الدفع</th>
+                                        <th>تاريخ الدفع</th>
+                                        <th>الحالة</th>
+                                        <th>تاريخ الإنشاء</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in payments.items %}
+                                        <tr>
+                                            <td>
+                                                <a href="{{ url_for('payments.view_payment', payment_id=payment.id) }}" 
+                                                   class="text-decoration-none">
+                                                    {{ payment.id[:8] }}...
+                                                </a>
+                                            </td>
+                                            <td>
+                                                {% if payment.claim %}
+                                                    <a href="{{ url_for('claims.view', id=payment.claim.id) }}" 
+                                                       class="text-decoration-none">
+                                                        {{ payment.claim.client_name }}
+                                                    </a>
+                                                {% else %}
+                                                    غير محدد
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <strong>{{ "{:,.2f}".format(payment.amount) }}</strong>
+                                                <small class="text-muted">{{ payment.currency }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">
+                                                    {{ payment.get_payment_method_text_ar() }}
+                                                </span>
+                                            </td>
+                                            <td>{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ payment.get_status_color() }}">
+                                                    {{ payment.get_status_text_ar() }}
+                                                </span>
+                                            </td>
+                                            <td>{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{{ url_for('payments.view_payment', payment_id=payment.id) }}" 
+                                                       class="btn btn-sm btn-outline-primary" title="عرض">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('payments.edit_payment', payment_id=payment.id) }}" 
+                                                       class="btn btn-sm btn-outline-warning" title="تعديل">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                            onclick="confirmDelete('{{ payment.id }}')" title="حذف">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if payments.pages > 1 %}
+                            <nav aria-label="صفحات المدفوعات">
+                                <ul class="pagination justify-content-center">
+                                    {% if payments.has_prev %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('payments.index', page=payments.prev_num) }}">
+                                                السابق
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for page_num in payments.iter_pages() %}
+                                        {% if page_num %}
+                                            {% if page_num != payments.page %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="{{ url_for('payments.index', page=page_num) }}">
+                                                        {{ page_num }}
+                                                    </a>
+                                                </li>
+                                            {% else %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ page_num }}</span>
+                                                </li>
+                                            {% endif %}
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if payments.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('payments.index', page=payments.next_num) }}">
+                                                التالي
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-money-bill-wave fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد مدفوعات</h5>
+                            <p class="text-muted">ابدأ بإنشاء مدفوعة جديدة</p>
+                            <a href="{{ url_for('payments.create_payment') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                إنشاء مدفوعة جديدة
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                هل أنت متأكد من حذف هذه المدفوعة؟ لا يمكن التراجع عن هذا الإجراء.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">حذف</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(paymentId) {
+    const deleteForm = document.getElementById('deleteForm');
+    deleteForm.action = `/payments/delete/${paymentId}`;
+    
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+}
+
+// Auto-refresh every 5 minutes
+setInterval(function() {
+    location.reload();
+}, 300000);
+</script>
+{% endblock %}

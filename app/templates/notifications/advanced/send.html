@@ -1,0 +1,426 @@
+{% extends "base.html" %}
+
+{% block title %}إرسال إشعار مخصص{% endblock %}
+
+{% block extra_css %}
+<style>
+    .send-card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-radius: 10px;
+    }
+    .notification-preview {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .recipient-badge {
+        display: inline-block;
+        background: #e9ecef;
+        color: #495057;
+        padding: 5px 10px;
+        border-radius: 15px;
+        margin: 2px;
+        font-size: 0.9rem;
+    }
+    .priority-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+    }
+    .priority-low { background-color: #6c757d; }
+    .priority-normal { background-color: #28a745; }
+    .priority-high { background-color: #ffc107; }
+    .priority-urgent { background-color: #dc3545; }
+    .form-floating textarea {
+        min-height: 120px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-paper-plane text-primary"></i>
+                        إرسال إشعار مخصص
+                    </h2>
+                    <p class="text-muted mb-0">إرسال إشعارات مخصصة للمستخدمين</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('advanced_notifications.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> العودة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Send Form -->
+        <div class="col-md-8">
+            <div class="card send-card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        تفاصيل الإشعار
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="sendNotificationForm">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Title -->
+                        <div class="form-floating mb-3">
+                            {{ form.title(class="form-control", placeholder="عنوان الإشعار") }}
+                            {{ form.title.label() }}
+                            {% if form.title.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.title.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Message -->
+                        <div class="form-floating mb-3">
+                            {{ form.message(class="form-control", placeholder="نص الإشعار", rows="5") }}
+                            {{ form.message.label() }}
+                            {% if form.message.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.message.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Notification Types -->
+                        <div class="mb-3">
+                            {{ form.notification_types.label(class="form-label") }}
+                            {{ form.notification_types(class="form-select") }}
+                            <div class="form-text">اختر نوع الإشعار المراد إرساله</div>
+                        </div>
+
+                        <!-- Priority -->
+                        <div class="mb-3">
+                            {{ form.priority.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <span class="priority-indicator priority-normal" id="priority-indicator"></span>
+                                </span>
+                                {{ form.priority(class="form-select", id="priority-select") }}
+                            </div>
+                        </div>
+
+                        <!-- Recipients -->
+                        <div class="mb-3">
+                            {{ form.recipient_type.label(class="form-label") }}
+                            {{ form.recipient_type(class="form-select", id="recipient-type-select") }}
+                        </div>
+
+                        <!-- Specific Users (hidden by default) -->
+                        <div class="mb-3" id="specific-users-group" style="display: none;">
+                            {{ form.specific_users.label(class="form-label") }}
+                            {{ form.specific_users(class="form-control", placeholder="1,2,3") }}
+                            <div class="form-text">{{ form.specific_users.description }}</div>
+                        </div>
+
+                        <!-- Scheduling -->
+                        <div class="card border-secondary mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-clock me-2"></i>
+                                    جدولة الإرسال
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-3">
+                                    {{ form.send_immediately(class="form-check-input", id="send-immediately") }}
+                                    {{ form.send_immediately.label(class="form-check-label") }}
+                                </div>
+                                
+                                <div id="scheduling-options" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            {{ form.scheduled_date.label(class="form-label") }}
+                                            {{ form.scheduled_date(class="form-control") }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ form.scheduled_time.label(class="form-label") }}
+                                            {{ form.scheduled_time(class="form-control") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary btn-lg", id="submit-btn") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="col-md-4">
+            <div class="card send-card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-eye me-2"></i>
+                        معاينة الإشعار
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="notification-preview">
+                        <h6 id="preview-title">عنوان الإشعار</h6>
+                        <p id="preview-message" class="mb-2">نص الإشعار سيظهر هنا...</p>
+                        <small class="opacity-75">
+                            <i class="fas fa-clock me-1"></i>
+                            <span id="preview-time">الآن</span>
+                        </small>
+                    </div>
+                    
+                    <!-- Recipients Preview -->
+                    <div class="mb-3">
+                        <h6 class="text-muted">المستلمون:</h6>
+                        <div id="recipients-preview">
+                            <span class="recipient-badge">جميع المستخدمين</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Notification Type Preview -->
+                    <div class="mb-3">
+                        <h6 class="text-muted">نوع الإشعار:</h6>
+                        <div id="notification-type-preview">
+                            <span class="badge bg-primary">جميع الأنواع المفعلة</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Priority Preview -->
+                    <div class="mb-3">
+                        <h6 class="text-muted">الأولوية:</h6>
+                        <div id="priority-preview">
+                            <span class="priority-indicator priority-normal"></span>
+                            <span>عادية</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Templates -->
+            <div class="card send-card mt-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-templates me-2"></i>
+                        قوالب سريعة
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="useTemplate('maintenance')">
+                            <i class="fas fa-tools me-2"></i>صيانة النظام
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="useTemplate('update')">
+                            <i class="fas fa-sync me-2"></i>تحديث النظام
+                        </button>
+                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="useTemplate('reminder')">
+                            <i class="fas fa-bell me-2"></i>تذكير عام
+                        </button>
+                        <button type="button" class="btn btn-outline-info btn-sm" onclick="useTemplate('announcement')">
+                            <i class="fas fa-bullhorn me-2"></i>إعلان مهم
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Update preview when form fields change
+    $('#title').on('input', function() {
+        const title = $(this).val() || 'عنوان الإشعار';
+        $('#preview-title').text(title);
+    });
+    
+    $('#message').on('input', function() {
+        const message = $(this).val() || 'نص الإشعار سيظهر هنا...';
+        $('#preview-message').text(message);
+    });
+    
+    // Update priority indicator
+    $('#priority-select').change(function() {
+        const priority = $(this).val();
+        const indicator = $('#priority-indicator');
+        const previewIndicator = $('#priority-preview .priority-indicator');
+        const previewText = $('#priority-preview span');
+        
+        // Remove all priority classes
+        indicator.removeClass('priority-low priority-normal priority-high priority-urgent');
+        previewIndicator.removeClass('priority-low priority-normal priority-high priority-urgent');
+        
+        // Add selected priority class
+        indicator.addClass('priority-' + priority);
+        previewIndicator.addClass('priority-' + priority);
+        
+        // Update preview text
+        const priorityText = {
+            'low': 'منخفضة',
+            'normal': 'عادية',
+            'high': 'عالية',
+            'urgent': 'عاجلة'
+        };
+        previewText.text(priorityText[priority] || 'عادية');
+    });
+    
+    // Update recipients preview
+    $('#recipient-type-select').change(function() {
+        const recipientType = $(this).val();
+        const preview = $('#recipients-preview');
+        
+        const recipientText = {
+            'all_users': 'جميع المستخدمين',
+            'admins': 'المديرون فقط',
+            'agents': 'موظفو المطالبات فقط',
+            'specific': 'مستخدمون محددون'
+        };
+        
+        preview.html(`<span class="recipient-badge">${recipientText[recipientType] || 'غير محدد'}</span>`);
+        
+        // Show/hide specific users field
+        if (recipientType === 'specific') {
+            $('#specific-users-group').slideDown();
+        } else {
+            $('#specific-users-group').slideUp();
+        }
+    });
+    
+    // Update notification type preview
+    $('#notification_types').change(function() {
+        const notificationType = $(this).val();
+        const preview = $('#notification-type-preview');
+        
+        const typeText = {
+            'email': 'بريد إلكتروني فقط',
+            'sms': 'رسالة نصية فقط',
+            'push': 'إشعار منبثق فقط',
+            'whatsapp': 'واتساب فقط',
+            'in_app': 'داخل التطبيق فقط',
+            'all': 'جميع الأنواع المفعلة',
+            'email,push': 'بريد إلكتروني + منبثق',
+            'email,sms': 'بريد إلكتروني + رسالة نصية'
+        };
+        
+        const badgeClass = {
+            'email': 'bg-primary',
+            'sms': 'bg-success',
+            'push': 'bg-warning',
+            'whatsapp': 'bg-success',
+            'in_app': 'bg-info',
+            'all': 'bg-primary'
+        };
+        
+        const className = badgeClass[notificationType] || 'bg-primary';
+        preview.html(`<span class="badge ${className}">${typeText[notificationType] || 'غير محدد'}</span>`);
+    });
+    
+    // Toggle scheduling options
+    $('#send-immediately').change(function() {
+        if ($(this).is(':checked')) {
+            $('#scheduling-options').slideUp();
+            $('#preview-time').text('الآن');
+        } else {
+            $('#scheduling-options').slideDown();
+            updatePreviewTime();
+        }
+    });
+    
+    // Update preview time when scheduling changes
+    $('#scheduled_date, #scheduled_time').change(function() {
+        updatePreviewTime();
+    });
+    
+    function updatePreviewTime() {
+        const date = $('#scheduled_date').val();
+        const time = $('#scheduled_time').val();
+        
+        if (date && time) {
+            $('#preview-time').text(`مجدول لـ ${date} في ${time}`);
+        } else if (date) {
+            $('#preview-time').text(`مجدول لـ ${date}`);
+        } else {
+            $('#preview-time').text('مجدول');
+        }
+    }
+    
+    // Form submission with loading state
+    $('#sendNotificationForm').submit(function() {
+        const submitBtn = $('#submit-btn');
+        const originalText = submitBtn.val();
+        
+        submitBtn.val('جاري الإرسال...').prop('disabled', true);
+        
+        // Add spinner
+        submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>جاري الإرسال...');
+        
+        // Re-enable button after 5 seconds in case of error
+        setTimeout(function() {
+            submitBtn.html(originalText).prop('disabled', false);
+        }, 5000);
+    });
+    
+    // Initialize preview
+    $('#priority-select').trigger('change');
+    $('#recipient-type-select').trigger('change');
+    $('#notification_types').trigger('change');
+});
+
+// Quick templates
+function useTemplate(templateType) {
+    const templates = {
+        'maintenance': {
+            title: 'صيانة مجدولة للنظام',
+            message: 'سيتم إجراء صيانة مجدولة للنظام يوم [التاريخ] من الساعة [الوقت]. قد تواجه انقطاع مؤقت في الخدمة.',
+            priority: 'high'
+        },
+        'update': {
+            title: 'تحديث جديد للنظام',
+            message: 'تم إصدار تحديث جديد للنظام يتضمن مميزات وتحسينات جديدة. سيتم تطبيق التحديث تلقائياً.',
+            priority: 'normal'
+        },
+        'reminder': {
+            title: 'تذكير مهم',
+            message: 'نذكركم بأهمية مراجعة المطالبات المعلقة وإكمال المعاملات المطلوبة في الوقت المحدد.',
+            priority: 'normal'
+        },
+        'announcement': {
+            title: 'إعلان مهم',
+            message: 'نود إعلامكم بـ [الموضوع]. للمزيد من التفاصيل، يرجى مراجعة القسم المخصص في النظام.',
+            priority: 'high'
+        }
+    };
+    
+    const template = templates[templateType];
+    if (template) {
+        $('#title').val(template.title).trigger('input');
+        $('#message').val(template.message).trigger('input');
+        $('#priority-select').val(template.priority).trigger('change');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}إعدادات البريد الإلكتروني{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-envelope-open-text me-2"></i>
+                    إعدادات البريد الإلكتروني
+                </h1>
+                <a href="{{ url_for('admin.settings') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    العودة للإعدادات
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        تكوين خادم البريد الإلكتروني
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="email-settings-form">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.mail_server.label(class="form-label") }}
+                                    {{ form.mail_server(class="form-control") }}
+                                    <div class="form-text">مثال: smtp.gmail.com</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.mail_port.label(class="form-label") }}
+                                    {{ form.mail_port(class="form-control") }}
+                                    <div class="form-text">587 للـ TLS، 465 للـ SSL</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        {{ form.mail_use_tls(class="form-check-input") }}
+                                        {{ form.mail_use_tls.label(class="form-check-label") }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        {{ form.mail_use_ssl(class="form-check-input") }}
+                                        {{ form.mail_use_ssl.label(class="form-check-label") }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.mail_username.label(class="form-label") }}
+                            {{ form.mail_username(class="form-control") }}
+                            <div class="form-text">البريد الإلكتروني المرسل</div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.mail_password.label(class="form-label") }}
+                            {{ form.mail_password(class="form-control") }}
+                            <div class="form-text">
+                                <strong>مهم:</strong> استخدم App Password وليس كلمة المرور العادية
+                                <a href="https://support.google.com/accounts/answer/185833" target="_blank" class="text-decoration-none">
+                                    <i class="fas fa-external-link-alt ms-1"></i>
+                                    كيفية إنشاء App Password
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.mail_default_sender.label(class="form-label") }}
+                            {{ form.mail_default_sender(class="form-control") }}
+                            <div class="form-text">البريد الإلكتروني الذي سيظهر كمرسل</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-info" id="test-email-btn">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                اختبار الإعدادات
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                حفظ الإعدادات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        معلومات مهمة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-lightbulb me-2"></i>نصائح للإعداد:</h6>
+                        <ul class="mb-0">
+                            <li>استخدم App Password للـ Gmail</li>
+                            <li>تأكد من تفعيل 2FA في حسابك</li>
+                            <li>اختبر الإعدادات قبل الحفظ</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>تحذير:</h6>
+                        <p class="mb-0">لا تشارك بيانات البريد الإلكتروني مع أحد</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        إحصائيات البريد
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="text-success">{{ email_stats.sent_today }}</h4>
+                            <small class="text-muted">مرسل اليوم</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-danger">{{ email_stats.failed_today }}</h4>
+                            <small class="text-muted">فشل اليوم</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test Email Modal -->
+<div class="modal fade" id="testEmailModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">اختبار البريد الإلكتروني</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">البريد الإلكتروني للاختبار:</label>
+                    <input type="email" class="form-control" id="test-email-address" placeholder="test@example.com">
+                </div>
+                <div id="test-result" class="mt-3"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="send-test-email">إرسال اختبار</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('test-email-btn').addEventListener('click', function() {
+    const modal = new bootstrap.Modal(document.getElementById('testEmailModal'));
+    modal.show();
+});
+
+document.getElementById('send-test-email').addEventListener('click', function() {
+    const email = document.getElementById('test-email-address').value;
+    const resultDiv = document.getElementById('test-result');
+    
+    if (!email) {
+        resultDiv.innerHTML = '<div class="alert alert-warning">يرجى إدخال بريد إلكتروني صحيح</div>';
+        return;
+    }
+    
+    resultDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>جاري الإرسال...</div>';
+    
+    fetch('{{ url_for("admin.test_email") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            email: email,
+            mail_server: document.querySelector('[name="mail_server"]').value,
+            mail_port: document.querySelector('[name="mail_port"]').value,
+            mail_username: document.querySelector('[name="mail_username"]').value,
+            mail_password: document.querySelector('[name="mail_password"]').value,
+            mail_use_tls: document.querySelector('[name="mail_use_tls"]').checked,
+            mail_use_ssl: document.querySelector('[name="mail_use_ssl"]').checked
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            resultDiv.innerHTML = '<div class="alert alert-success"><i class="fas fa-check me-2"></i>' + data.message + '</div>';
+        } else {
+            resultDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-times me-2"></i>' + data.error + '</div>';
+        }
+    })
+    .catch(error => {
+        resultDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-times me-2"></i>حدث خطأ في الاتصال</div>';
+    });
+});
+</script>
+{% endblock %}

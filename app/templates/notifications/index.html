@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}الإشعارات{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-bell me-2"></i>
+                    الإشعارات
+                    {% if unread_count > 0 %}
+                        <span class="badge bg-danger ms-2">{{ unread_count }}</span>
+                    {% endif %}
+                </h2>
+                <div>
+                    <a href="{{ url_for('notifications.preferences') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-cog me-2"></i>
+                        إعدادات الإشعارات
+                    </a>
+                    {% if current_user.role == 'admin' %}
+                    <button class="btn btn-outline-info" onclick="sendTestNotification()">
+                        <i class="fas fa-paper-plane me-2"></i>
+                        إشعار تجريبي
+                    </button>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('notifications.clear_all') }}" class="d-inline" 
+                          onsubmit="return confirm('هل أنت متأكد من حذف جميع الإشعارات؟')">
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="fas fa-trash me-2"></i>
+                            حذف الكل
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if notifications.items %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body p-0">
+                    {% for notification in notifications.items %}
+                    <div class="notification-item border-bottom p-3 {% if not notification.is_read %}bg-light{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="notification-icon me-3">
+                                        {% if notification.notification_type == 'claim_created' %}
+                                            <i class="fas fa-plus-circle text-success fa-lg"></i>
+                                        {% elif notification.notification_type == 'claim_status_changed' %}
+                                            <i class="fas fa-sync-alt text-warning fa-lg"></i>
+                                        {% elif notification.notification_type == 'claim_sent' %}
+                                            <i class="fas fa-paper-plane text-info fa-lg"></i>
+                                        {% else %}
+                                            <i class="fas fa-bell text-primary fa-lg"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 {% if not notification.is_read %}fw-bold{% endif %}">
+                                            {{ notification.title }}
+                                        </h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                        </small>
+                                    </div>
+                                </div>
+                                <p class="mb-2 text-muted">{{ notification.message }}</p>
+                                
+                                {% if notification.related_claim_id %}
+                                <div class="mb-2">
+                                    <a href="{{ url_for('claims.view_claim', claim_id=notification.related_claim_id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i>
+                                        عرض المطالبة
+                                    </a>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="notification-meta">
+                                    <small class="text-muted">
+                                        {% if notification.sent_via_email %}
+                                            <i class="fas fa-envelope me-1 text-success" title="تم الإرسال عبر البريد الإلكتروني"></i>
+                                        {% endif %}
+                                        {% if notification.sent_via_sms %}
+                                            <i class="fas fa-sms me-1 text-info" title="تم الإرسال عبر SMS"></i>
+                                        {% endif %}
+                                        {% if notification.is_read %}
+                                            <span class="badge bg-secondary">مقروء</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">جديد</span>
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="notification-actions">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                            type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        {% if not notification.is_read %}
+                                        <li>
+                                            <a class="dropdown-item" href="#" 
+                                               onclick="markAsRead({{ notification.id }})">
+                                                <i class="fas fa-check me-2"></i>
+                                                تحديد كمقروء
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        <li>
+                                            <form method="POST" action="{{ url_for('notifications.delete_notification', notification_id=notification.id) }}" 
+                                                  class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا الإشعار؟')">
+                                                <button type="submit" class="dropdown-item text-danger">
+                                                    <i class="fas fa-trash me-2"></i>
+                                                    حذف
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Pagination -->
+            {% if notifications.pages > 1 %}
+            <nav aria-label="تنقل الصفحات" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if notifications.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('notifications.index', page=notifications.prev_num) }}">السابق</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page_num in notifications.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != notifications.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('notifications.index', page=page_num) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">…</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if notifications.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('notifications.index', page=notifications.next_num) }}">التالي</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">لا توجد إشعارات</h4>
+                    <p class="text-muted">ستظهر الإشعارات هنا عند توفرها</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function markAsRead(notificationId) {
+    fetch(`/notifications/api/mark-read/${notificationId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+function sendTestNotification() {
+    fetch('/notifications/test', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('تم إرسال الإشعار التجريبي بنجاح');
+        } else {
+            alert('فشل في إرسال الإشعار: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ في إرسال الإشعار');
+    });
+}
+</script>
+
+<style>
+.notification-item {
+    transition: background-color 0.2s ease;
+}
+
+.notification-item:hover {
+    background-color: #f8f9fa !important;
+}
+
+.notification-icon {
+    min-width: 40px;
+}
+
+.notification-actions {
+    min-width: 50px;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,342 @@
+/* Insurance Claims Management System - Main Styles */
+
+/* RTL Support */
+body {
+    direction: rtl;
+    text-align: right;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Bootstrap RTL Overrides */
+.navbar-brand {
+    margin-right: 0;
+    margin-left: 1rem;
+}
+
+.dropdown-menu {
+    right: 0;
+    left: auto;
+}
+
+/* Custom Styles */
+.sidebar {
+    position: fixed;
+    top: 56px;
+    right: 0;
+    width: 250px;
+    height: calc(100vh - 56px);
+    background-color: #343a40;
+    padding-top: 20px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.main-content {
+    margin-right: 250px;
+    padding: 20px;
+    min-height: calc(100vh - 56px);
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.status-badge {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.file-upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.file-upload-area:hover {
+    border-color: #0d6efd;
+    background-color: #f8f9ff;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+/* Language Switcher */
+.language-switcher {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1002;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        position: static;
+        min-height: auto;
+        padding-top: 0;
+    }
+    
+    .main-content {
+        margin-right: 0;
+        padding-top: 20px;
+    }
+}
+
+/* Advanced Features Styles */
+.feature-card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 24px;
+    color: white;
+}
+
+.ai-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.notification-gradient {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.config-gradient {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+/* Notification Styles */
+.notification-preview {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.recipient-badge {
+    display: inline-block;
+    background: #e9ecef;
+    color: #495057;
+    padding: 5px 10px;
+    border-radius: 15px;
+    margin: 2px;
+    font-size: 0.9rem;
+}
+
+.priority-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.priority-low { background-color: #6c757d; }
+.priority-normal { background-color: #28a745; }
+.priority-high { background-color: #ffc107; }
+.priority-urgent { background-color: #dc3545; }
+
+/* Settings Styles */
+.settings-card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.settings-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.form-switch .form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+}
+
+.notification-type-card {
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.notification-type-card.enabled {
+    border-color: #28a745;
+    background-color: #f8fff9;
+}
+
+.notification-type-card.disabled {
+    border-color: #dc3545;
+    background-color: #fff8f8;
+}
+
+/* Statistics Cards */
+.stats-card {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border-radius: 10px;
+}
+
+/* Service Status */
+.service-status {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.status-configured { background-color: #28a745; }
+.status-not-configured { background-color: #dc3545; }
+
+/* Quick Action Buttons */
+.quick-action-btn {
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-weight: 500;
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Toast Notifications */
+.toast-container {
+    z-index: 1055;
+}
+
+/* Form Enhancements */
+.form-floating textarea {
+    min-height: 120px;
+}
+
+.time-input {
+    max-width: 150px;
+}
+
+/* Chart Containers */
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin-bottom: 20px;
+}
+
+/* Print Styles */
+@media print {
+    .sidebar,
+    .navbar,
+    .language-switcher {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-right: 0 !important;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .card {
+        background-color: #2d3748;
+        color: #e2e8f0;
+    }
+    
+    .table {
+        color: #e2e8f0;
+    }
+    
+    .table th {
+        background-color: #4a5568;
+    }
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Utility Classes */
+.text-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.shadow-lg {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+}
+
+.border-radius-lg {
+    border-radius: 15px !important;
+}
+
+/* Custom Scrollbar */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: #495057;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: #6c757d;
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: #adb5bd;
+}

@@ -13,7 +13,10 @@ import smtplib
 import getpass
 from email.message import EmailMessage
 from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+السلام عليكم
+
+
+
 from email.mime.base import MIMEBase
 from email import encoders
 from pathlib import Path

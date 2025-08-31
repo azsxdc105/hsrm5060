@@ -11,10 +11,26 @@
                     <i class="fas fa-list me-2"></i>
                     جميع المطالبات
                 </h1>
-                <a href="{{ url_for('claims.new_claim') }}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>
-                    مطالبة جديدة
-                </a>
+                <div>
+                    <div class="btn-group me-2" role="group">
+                        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-download me-2"></i>
+                            تصدير
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="exportClaims('excel')">
+                                <i class="fas fa-file-excel me-2"></i>تصدير إلى Excel
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportClaims('pdf')">
+                                <i class="fas fa-file-pdf me-2"></i>تصدير إلى PDF
+                            </a></li>
+                        </ul>
+                    </div>
+                    <a href="{{ url_for('claims.new') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>
+                        مطالبة جديدة
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -92,7 +108,7 @@
                                     {% for claim in claims.items %}
                                         <tr>
                                             <td>
-                                                <a href="{{ url_for('claims.view_claim', claim_id=claim.id) }}" class="text-decoration-none">
+                                                <a href="{{ url_for('claims.view', id=claim.id) }}" class="text-decoration-none">
                                                     {{ claim.id[:8] }}...
                                                 </a>
                                             </td>
@@ -108,16 +124,16 @@
                                             <td>{{ claim.created_at.strftime('%Y-%m-%d') }}</td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="{{ url_for('claims.view_claim', claim_id=claim.id) }}" 
+                                                    <a href="{{ url_for('claims.view', id=claim.id) }}"
                                                        class="btn btn-sm btn-outline-primary">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a href="{{ url_for('claims.edit_claim', claim_id=claim.id) }}" 
+                                                    <a href="{{ url_for('claims.edit', id=claim.id) }}"
                                                        class="btn btn-sm btn-outline-secondary">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
                                                     {% if claim.status in ['draft', 'ready', 'failed'] %}
-                                                        <form method="POST" action="{{ url_for('claims.send_claim', claim_id=claim.id) }}" class="d-inline">
+                                                        <form method="POST" action="{{ url_for('claims.send', id=claim.id) }}" class="d-inline">
                                                             <button type="submit" class="btn btn-sm btn-outline-success" 
                                                                     onclick="return confirm('هل أنت متأكد من إرسال المطالبة؟')">
                                                                 <i class="fas fa-paper-plane"></i>
@@ -173,7 +189,7 @@
                             <i class="fas fa-inbox fa-3x mb-3"></i>
                             <h5>لا توجد مطالبات</h5>
                             <p>لم يتم العثور على مطالبات تطابق معايير البحث</p>
-                            <a href="{{ url_for('claims.new_claim') }}" class="btn btn-primary">
+                            <a href="{{ url_for('claims.new') }}" class="btn btn-primary">
                                 <i class="fas fa-plus me-2"></i>
                                 إنشاء مطالبة جديدة
                             </a>
@@ -205,5 +221,29 @@
             });
         });
     });
+
+    // Export function
+    function exportClaims(format) {
+        // Get current filter values
+        const searchTerm = document.querySelector('input[name="search_term"]').value;
+        const companyId = document.querySelector('select[name="company_id"]').value;
+        const status = document.querySelector('select[name="status"]').value;
+        const dateFrom = document.querySelector('input[name="date_from"]').value;
+        const dateTo = document.querySelector('input[name="date_to"]').value;
+
+        // Build export URL with current filters
+        const params = new URLSearchParams();
+        if (searchTerm) params.append('search_term', searchTerm);
+        if (companyId) params.append('company_id', companyId);
+        if (status) params.append('status', status);
+        if (dateFrom) params.append('date_from', dateFrom);
+        if (dateTo) params.append('date_to', dateTo);
+
+        const exportUrl = `{{ url_for('main.export_claims_data', format='FORMAT') }}`.replace('FORMAT', format);
+        const finalUrl = exportUrl + (params.toString() ? '?' + params.toString() : '');
+
+        // Open export URL
+        window.location.href = finalUrl;
+    }
 </script>
 {% endblock %}

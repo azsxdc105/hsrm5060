@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}الملف الشخصي{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-user me-2"></i>
+                    الملف الشخصي
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        معلومات المستخدم
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>الاسم الكامل:</strong></label>
+                                <p class="form-control-plaintext">{{ current_user.full_name }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>البريد الإلكتروني:</strong></label>
+                                <p class="form-control-plaintext">{{ current_user.email }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>الدور:</strong></label>
+                                <p class="form-control-plaintext">
+                                    {% if current_user.role == 'admin' %}
+                                        <span class="badge bg-danger">مدير</span>
+                                    {% elif current_user.role == 'manager' %}
+                                        <span class="badge bg-warning">مدير قسم</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">موظف</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>الحالة:</strong></label>
+                                <p class="form-control-plaintext">
+                                    {% if current_user.active %}
+                                        <span class="badge bg-success">نشط</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">غير نشط</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>تاريخ الإنشاء:</strong></label>
+                                <p class="form-control-plaintext">{{ current_user.created_at.strftime('%Y-%m-%d %H:%M') if current_user.created_at else 'غير محدد' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>آخر تسجيل دخول:</strong></label>
+                                <p class="form-control-plaintext">{{ current_user.last_login.strftime('%Y-%m-%d %H:%M') if current_user.last_login else 'لم يسجل دخول من قبل' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        إحصائيات سريعة
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <h3 class="text-primary mb-0">{{ current_user.created_claims.count() if current_user.created_claims else 0 }}</h3>
+                            <small class="text-muted">المطالبات المنشأة</small>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <h4 class="text-success mb-0">{{ current_user.created_claims.filter_by(status='paid').count() if current_user.created_claims else 0 }}</h4>
+                            <small class="text-muted">مدفوعة</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-warning mb-0">{{ current_user.created_claims.filter_by(status='sent').count() if current_user.created_claims else 0 }}</h4>
+                            <small class="text-muted">مرسلة</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        إعدادات الحساب
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                            <i class="fas fa-key me-2"></i>
+                            تغيير كلمة المرور
+                        </button>
+                        
+                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-right me-2"></i>
+                            العودة للوحة التحكم
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تغيير كلمة المرور</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('auth.change_password') }}">
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">كلمة المرور الحالية</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">كلمة المرور الجديدة</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required minlength="6">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">تأكيد كلمة المرور الجديدة</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required minlength="6">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">تغيير كلمة المرور</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Password confirmation validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('#changePasswordModal form');
+    const newPassword = document.getElementById('new_password');
+    const confirmPassword = document.getElementById('confirm_password');
+    
+    function validatePasswords() {
+        if (newPassword.value !== confirmPassword.value) {
+            confirmPassword.setCustomValidity('كلمات المرور غير متطابقة');
+        } else {
+            confirmPassword.setCustomValidity('');
+        }
+    }
+    
+    newPassword.addEventListener('input', validatePasswords);
+    confirmPassword.addEventListener('input', validatePasswords);
+    
+    form.addEventListener('submit', function(e) {
+        validatePasswords();
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+});
+</script>
+{% endblock %}

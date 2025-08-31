@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}الإشعارات المتقدمة{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-item {
+        border-left: 4px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+    .notification-item:hover {
+        background-color: #f8f9fa;
+        transform: translateX(-2px);
+    }
+    .notification-item.unread {
+        border-left-color: #007bff;
+        background-color: #f8f9ff;
+    }
+    .notification-item.priority-high {
+        border-left-color: #ffc107;
+    }
+    .notification-item.priority-urgent {
+        border-left-color: #dc3545;
+    }
+    .notification-priority {
+        font-size: 0.75rem;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-weight: bold;
+    }
+    .notification-stats .card {
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .notification-actions {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .notification-item:hover .notification-actions {
+        opacity: 1;
+    }
+    .notification-bell {
+        position: relative;
+        display: inline-block;
+    }
+    .notification-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-bell text-primary"></i>
+                        الإشعارات المتقدمة
+                        {% if unread_count > 0 %}
+                        <span class="badge badge-danger">{{ unread_count }}</span>
+                        {% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">إدارة وعرض جميع الإشعارات</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('advanced_notifications.settings') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-cog"></i> الإعدادات
+                    </a>
+                    {% if current_user.is_admin() %}
+                    <a href="{{ url_for('advanced_notifications.whatsapp_test') }}" class="btn btn-outline-success">
+                        <i class="fab fa-whatsapp"></i> اختبار الواتساب
+                    </a>
+                    <a href="{{ url_for('advanced_notifications.send_notification') }}" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> إرسال إشعار
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4 notification-stats">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-inbox fa-2x text-primary mb-2"></i>
+                    <h4 class="mb-0">{{ stats.total }}</h4>
+                    <small class="text-muted">إجمالي الإشعارات</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-envelope fa-2x text-warning mb-2"></i>
+                    <h4 class="mb-0">{{ stats.unread }}</h4>
+                    <small class="text-muted">غير مقروءة</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-envelope-open fa-2x text-success mb-2"></i>
+                    <h4 class="mb-0">{{ stats.read }}</h4>
+                    <small class="text-muted">مقروءة</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-exclamation-triangle fa-2x text-danger mb-2"></i>
+                    <h4 class="mb-0">{{ stats.failed }}</h4>
+                    <small class="text-muted">فشل الإرسال</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    {% if unread_count > 0 %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <button id="markAllReadBtn" class="btn btn-sm btn-outline-success">
+                <i class="fas fa-check-double"></i> تحديد الكل كمقروء
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Notifications List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> قائمة الإشعارات
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if notifications.items %}
+                    <div class="list-group list-group-flush">
+                        {% for notification in notifications.items %}
+                        <div class="list-group-item notification-item {% if notification.status != 'read' %}unread{% endif %} priority-{{ notification.priority.value if notification.priority else 'normal' }}"
+                             data-notification-id="{{ notification.id }}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <h6 class="mb-0 me-2">{{ notification.title }}</h6>
+                                        <span class="notification-priority badge badge-{{ notification.get_priority_color() }}">
+                                            {% if notification.priority %}
+                                                {% if notification.priority.value == 'low' %}منخفض
+                                                {% elif notification.priority.value == 'normal' %}عادي
+                                                {% elif notification.priority.value == 'high' %}عالي
+                                                {% elif notification.priority.value == 'urgent' %}عاجل
+                                                {% endif %}
+                                            {% else %}عادي{% endif %}
+                                        </span>
+                                        <span class="badge badge-{{ notification.get_status_color() }} ms-2">
+                                            {% if notification.status == 'pending' %}في الانتظار
+                                            {% elif notification.status == 'sent' %}مرسل
+                                            {% elif notification.status == 'delivered' %}تم التسليم
+                                            {% elif notification.status == 'failed' %}فشل
+                                            {% elif notification.status == 'read' %}مقروء
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <p class="mb-2 text-muted">{{ notification.message[:150] }}{% if notification.message|length > 150 %}...{% endif %}</p>
+                                    <div class="d-flex align-items-center text-muted small">
+                                        <i class="fas fa-clock me-1"></i>
+                                        <span>{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                        {% if notification.notification_type %}
+                                        <i class="fas fa-tag ms-3 me-1"></i>
+                                        <span>
+                                            {% if notification.notification_type.value == 'email' %}بريد إلكتروني
+                                            {% elif notification.notification_type.value == 'sms' %}رسالة نصية
+                                            {% elif notification.notification_type.value == 'push' %}إشعار منبثق
+                                            {% elif notification.notification_type.value == 'whatsapp' %}واتساب
+                                            {% elif notification.notification_type.value == 'in_app' %}داخل التطبيق
+                                            {% endif %}
+                                        </span>
+                                        {% endif %}
+                                        {% if notification.claim_id %}
+                                        <i class="fas fa-file-alt ms-3 me-1"></i>
+                                        <a href="{{ url_for('claims.view', id=notification.claim_id) }}" class="text-decoration-none">
+                                            مطالبة {{ notification.claim_id }}
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="notification-actions">
+                                    {% if notification.status != 'read' %}
+                                    <button class="btn btn-sm btn-outline-success mark-read-btn" 
+                                            data-notification-id="{{ notification.id }}"
+                                            title="تحديد كمقروء">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا توجد إشعارات</h5>
+                        <p class="text-muted">لم يتم العثور على أي إشعارات حتى الآن</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if notifications.pages > 1 %}
+            <nav aria-label="تنقل الصفحات" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if notifications.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('advanced_notifications.index', page=notifications.prev_num) }}">السابق</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in notifications.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != notifications.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('advanced_notifications.index', page=page_num) }}">{{ page_num }}</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if notifications.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('advanced_notifications.index', page=notifications.next_num) }}">التالي</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Mark single notification as read
+    $('.mark-read-btn').click(function() {
+        const notificationId = $(this).data('notification-id');
+        const button = $(this);
+        const notificationItem = button.closest('.notification-item');
+        
+        $.post(`/advanced-notifications/${notificationId}/mark_read`)
+            .done(function(response) {
+                if (response.success) {
+                    button.remove();
+                    notificationItem.removeClass('unread');
+                    // Update unread count
+                    updateUnreadCount();
+                }
+            })
+            .fail(function() {
+                alert('حدث خطأ أثناء تحديث الإشعار');
+            });
+    });
+    
+    // Mark all notifications as read
+    $('#markAllReadBtn').click(function() {
+        const button = $(this);
+        button.prop('disabled', true);
+        
+        $.post('/advanced-notifications/mark_all_read')
+            .done(function(response) {
+                if (response.success) {
+                    $('.notification-item.unread').removeClass('unread');
+                    $('.mark-read-btn').remove();
+                    button.hide();
+                    // Update unread count
+                    updateUnreadCount();
+                    
+                    // Show success message
+                    if (response.count > 0) {
+                        showAlert('success', `تم تحديد ${response.count} إشعار كمقروء`);
+                    }
+                }
+            })
+            .fail(function() {
+                alert('حدث خطأ أثناء تحديث الإشعارات');
+            })
+            .always(function() {
+                button.prop('disabled', false);
+            });
+    });
+    
+    // Update unread count in header
+    function updateUnreadCount() {
+        $.get('/advanced-notifications/api/unread_count')
+            .done(function(response) {
+                const badge = $('.badge-danger');
+                if (response.count > 0) {
+                    badge.text(response.count).show();
+                } else {
+                    badge.hide();
+                }
+            });
+    }
+    
+    // Show alert message
+    function showAlert(type, message) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        $('.container-fluid').prepend(alertHtml);
+        
+        // Auto dismiss after 3 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut();
+        }, 3000);
+    }
+    
+    // Auto refresh unread count every 30 seconds
+    setInterval(updateUnreadCount, 30000);
+});
+</script>
+{% endblock %}

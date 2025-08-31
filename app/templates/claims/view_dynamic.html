@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}عرض المطالبة - {{ claim.incident_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .claim-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .claim-type-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .info-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+    
+    .info-card h5 {
+        color: #495057;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #6c757d;
+        flex: 0 0 40%;
+    }
+    
+    .info-value {
+        flex: 1;
+        text-align: left;
+        color: #495057;
+    }
+    
+    .status-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-pending { background-color: #fff3cd; color: #856404; }
+    .status-approved { background-color: #d4edda; color: #155724; }
+    .status-rejected { background-color: #f8d7da; color: #721c24; }
+    .status-under_review { background-color: #cce7ff; color: #004085; }
+    
+    .dynamic-field {
+        background: #f8f9fa;
+        border-left: 4px solid #007bff;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        border-radius: 0 8px 8px 0;
+    }
+    
+    .dynamic-field-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+    
+    .dynamic-field-value {
+        color: #6c757d;
+        font-size: 0.95rem;
+    }
+    
+    .action-buttons {
+        position: sticky;
+        top: 20px;
+        background: white;
+        padding: 1rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+    }
+    
+    .btn-action {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        border-radius: 25px;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Claim Header -->
+            <div class="claim-header">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        {% if claim_type %}
+                        <div class="claim-type-badge" style="background-color: {{ claim_type.color }};">
+                            <i class="{{ claim_type.icon }} me-2"></i>
+                            {{ claim_type.name_ar }}
+                        </div>
+                        {% endif %}
+                        <h2 class="mb-2">{{ claim.incident_number }}</h2>
+                        <p class="mb-0 opacity-75">{{ claim.client_name }}</p>
+                    </div>
+                    <div class="text-end">
+                        <div class="status-badge status-{{ claim.status }}">
+                            {{ claim.status|title }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Basic Information -->
+            <div class="info-card">
+                <h5><i class="fas fa-info-circle me-2"></i>المعلومات الأساسية</h5>
+                
+                <div class="info-row">
+                    <span class="info-label">اسم العميل:</span>
+                    <span class="info-value">{{ claim.client_name }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">رقم الهوية:</span>
+                    <span class="info-value">{{ claim.client_national_id }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">رقم البوليصة:</span>
+                    <span class="info-value">{{ claim.policy_number }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">تاريخ الحادث:</span>
+                    <span class="info-value">{{ claim.incident_date.strftime('%Y-%m-%d') if claim.incident_date else 'غير محدد' }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">مبلغ المطالبة:</span>
+                    <span class="info-value">{{ "{:,.2f}".format(claim.claim_amount) }} {{ claim.currency }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">المدينة:</span>
+                    <span class="info-value">{{ claim.city or 'غير محدد' }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">تاريخ الإنشاء:</span>
+                    <span class="info-value">{{ claim.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+            </div>
+
+            <!-- Claim Details -->
+            {% if claim.claim_details %}
+            <div class="info-card">
+                <h5><i class="fas fa-file-alt me-2"></i>تفاصيل المطالبة</h5>
+                <p class="mb-0">{{ claim.claim_details }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Dynamic Fields -->
+            {% if claim_type and dynamic_data %}
+            <div class="info-card">
+                <h5><i class="fas fa-magic me-2"></i>المعلومات المخصصة - {{ claim_type.name_ar }}</h5>
+                
+                {% for field in claim_type.dynamic_fields %}
+                    {% if dynamic_data.get(field.field_name) %}
+                    <div class="dynamic-field">
+                        <div class="dynamic-field-label">
+                            <i class="fas fa-{{ 'check-square' if field.field_type == 'checkbox' else 'edit' }} me-2"></i>
+                            {{ field.label_ar }}
+                        </div>
+                        <div class="dynamic-field-value">
+                            {% set field_value = dynamic_data.get(field.field_name) %}
+                            {% if field.field_type == 'checkbox' %}
+                                {% if field_value == 'true' or field_value == '1' %}
+                                    <i class="fas fa-check-circle text-success me-1"></i>نعم
+                                {% else %}
+                                    <i class="fas fa-times-circle text-danger me-1"></i>لا
+                                {% endif %}
+                            {% elif field.field_type == 'select' and field.options %}
+                                {% set options_dict = field.options.split('|') %}
+                                {% for option in options_dict %}
+                                    {% if option.split(':')[0] == field_value %}
+                                        {{ option.split(':')[1] if ':' in option else option }}
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                {{ field_value }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Tags -->
+            {% if claim.tags %}
+            <div class="info-card">
+                <h5><i class="fas fa-tags me-2"></i>العلامات</h5>
+                {% for tag in claim.tags.split(',') %}
+                    <span class="badge bg-secondary me-1">{{ tag.strip() }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <h6 class="mb-3"><i class="fas fa-cogs me-2"></i>الإجراءات</h6>
+                
+                {% if current_user.is_admin() %}
+                <a href="{{ url_for('claims.edit', id=claim.id) }}" class="btn btn-primary btn-action">
+                    <i class="fas fa-edit me-2"></i>تعديل المطالبة
+                </a>
+                {% endif %}
+                
+                <a href="{{ url_for('claims.index') }}" class="btn btn-outline-secondary btn-action">
+                    <i class="fas fa-list me-2"></i>جميع المطالبات
+                </a>
+                
+                {% if current_user.is_admin() %}
+                <button class="btn btn-outline-info btn-action" onclick="printClaim()">
+                    <i class="fas fa-print me-2"></i>طباعة المطالبة
+                </button>
+                
+                <button class="btn btn-outline-success btn-action" onclick="exportClaim()">
+                    <i class="fas fa-download me-2"></i>تصدير PDF
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Claim Statistics -->
+            <div class="info-card mt-3">
+                <h6><i class="fas fa-chart-bar me-2"></i>إحصائيات</h6>
+                
+                <div class="info-row">
+                    <span class="info-label">رقم المطالبة:</span>
+                    <span class="info-value">#{{ claim.id }}</span>
+                </div>
+                
+                {% if claim.email_sent_at %}
+                <div class="info-row">
+                    <span class="info-label">تاريخ الإرسال:</span>
+                    <span class="info-value">{{ claim.email_sent_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="info-row">
+                    <span class="info-label">آخر تحديث:</span>
+                    <span class="info-value">{{ claim.updated_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function printClaim() {
+    window.print();
+}
+
+function exportClaim() {
+    // يمكن إضافة وظيفة تصدير PDF هنا
+    alert('سيتم إضافة وظيفة التصدير قريباً');
+}
+</script>
+{% endblock %}

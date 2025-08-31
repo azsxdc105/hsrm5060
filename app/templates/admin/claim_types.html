@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة أنواع المطالبات{% endblock %}
+
+{% block extra_css %}
+<style>
+    .claim-type-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+    }
+    
+    .claim-type-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .claim-type-header {
+        padding: 1.5rem;
+        border-radius: 15px 15px 0 0;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .claim-type-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+    }
+    
+    .claim-type-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.9;
+    }
+    
+    .claim-type-body {
+        padding: 1.5rem;
+    }
+    
+    .field-count-badge {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-action {
+        flex: 1;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .stats-number {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .add-type-card {
+        border: 2px dashed #dee2e6;
+        border-radius: 15px;
+        padding: 3rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin-bottom: 1.5rem;
+    }
+    
+    .add-type-card:hover {
+        border-color: #007bff;
+        background-color: #f8f9fa;
+        transform: translateY(-2px);
+    }
+    
+    .add-type-icon {
+        font-size: 3rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
+    
+    .add-type-card:hover .add-type-icon {
+        color: #007bff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-cogs me-2"></i>إدارة أنواع المطالبات</h2>
+                    <p class="text-muted mb-0">إدارة وتخصيص أنواع المطالبات والحقول الديناميكية</p>
+                </div>
+                <a href="{{ url_for('dynamic_forms.new_claim_type') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-2"></i>إضافة نوع جديد
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ claim_types|length }}</div>
+                <div>أنواع المطالبات</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="stats-number">
+                    {% set total_fields = 0 %}
+                    {% for ct in claim_types %}
+                        {% set total_fields = total_fields + ct.dynamic_fields|length %}
+                    {% endfor %}
+                    {{ total_fields }}
+                </div>
+                <div>إجمالي الحقول</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="stats-number">
+                    {% set active_types = claim_types|selectattr('active')|list|length %}
+                    {{ active_types }}
+                </div>
+                <div>الأنواع النشطة</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <div class="stats-number">
+                    {% set total_claims = 0 %}
+                    {% for ct in claim_types %}
+                        {% set total_claims = total_claims + ct.claims|length %}
+                    {% endfor %}
+                    {{ total_claims }}
+                </div>
+                <div>إجمالي المطالبات</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Claim Types Grid -->
+    <div class="row">
+        {% for claim_type in claim_types %}
+        <div class="col-lg-4 col-md-6">
+            <div class="claim-type-card">
+                <div class="claim-type-header" style="background-color: {{ claim_type.color }};">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="claim-type-icon">
+                                <i class="{{ claim_type.icon }}"></i>
+                            </div>
+                            <h5 class="mb-1">{{ claim_type.name_ar }}</h5>
+                            <small class="opacity-75">{{ claim_type.name_en }}</small>
+                        </div>
+                        <div class="field-count-badge">
+                            {{ claim_type.dynamic_fields|length }} حقل
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="claim-type-body">
+                    <p class="text-muted mb-3">{{ claim_type.description_ar }}</p>
+                    
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <div class="fw-bold text-primary">{{ claim_type.claims|length }}</div>
+                            <small class="text-muted">مطالبة</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="fw-bold text-success">{{ claim_type.dynamic_fields|selectattr('active')|list|length }}</div>
+                            <small class="text-muted">حقل نشط</small>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <a href="{{ url_for('dynamic_forms.manage_claim_type_fields', claim_type_id=claim_type.id) }}" 
+                           class="btn btn-outline-primary btn-action">
+                            <i class="fas fa-list me-1"></i>الحقول
+                        </a>
+                        <button class="btn btn-outline-warning btn-action" onclick="editClaimType({{ claim_type.id }})">
+                            <i class="fas fa-edit me-1"></i>تعديل
+                        </button>
+                        {% if not claim_type.claims %}
+                        <button class="btn btn-outline-danger btn-action" onclick="deleteClaimType({{ claim_type.id }})">
+                            <i class="fas fa-trash me-1"></i>حذف
+                        </button>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-2">
+                        {% if claim_type.active %}
+                            <span class="badge bg-success">نشط</span>
+                        {% else %}
+                            <span class="badge bg-secondary">غير نشط</span>
+                        {% endif %}
+                        <span class="badge bg-info">{{ claim_type.code }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <!-- Add New Type Card -->
+        <div class="col-lg-4 col-md-6">
+            <div class="add-type-card" onclick="window.location.href='{{ url_for('dynamic_forms.new_claim_type') }}'">
+                <div class="add-type-icon">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <h5 class="text-muted">إضافة نوع جديد</h5>
+                <p class="text-muted mb-0">انقر لإنشاء نوع مطالبة جديد</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function editClaimType(id) {
+    // يمكن إضافة نافذة تعديل هنا
+    alert('سيتم إضافة وظيفة التعديل قريباً');
+}
+
+function deleteClaimType(id) {
+    if (confirm('هل أنت متأكد من حذف هذا النوع؟')) {
+        // يمكن إضافة وظيفة الحذف هنا
+        alert('سيتم إضافة وظيفة الحذف قريباً');
+    }
+}
+</script>
+{% endblock %}

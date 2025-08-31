@@ -1,0 +1,572 @@
+<!-- Enhanced File Manager Component -->
+<div class="file-manager-container">
+    <!-- File Upload Area -->
+    <div class="upload-area" id="uploadArea">
+        <div class="upload-content">
+            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+            <h5>اسحب الملفات هنا أو انقر للاختيار</h5>
+            <p class="text-muted">الحد الأقصى: 10MB لكل ملف</p>
+            <input type="file" id="fileInput" multiple accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.zip" style="display: none;">
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-plus me-2"></i>اختيار الملفات
+            </button>
+        </div>
+    </div>
+
+    <!-- Upload Progress -->
+    <div id="uploadProgress" class="upload-progress" style="display: none;">
+        <div class="progress mb-2">
+            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+        </div>
+        <div class="upload-status">جاري الرفع...</div>
+    </div>
+
+    <!-- Files List -->
+    <div class="files-container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">
+                <i class="fas fa-paperclip me-2"></i>
+                المرفقات (<span id="filesCount">0</span>)
+            </h6>
+            <div class="file-actions">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleView()">
+                    <i class="fas fa-th" id="viewToggleIcon"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearAllFiles()">
+                    <i class="fas fa-trash me-1"></i>مسح الكل
+                </button>
+            </div>
+        </div>
+
+        <!-- Files Grid/List View -->
+        <div id="filesGrid" class="files-grid">
+            <!-- Files will be dynamically added here -->
+        </div>
+    </div>
+</div>
+
+<!-- File Preview Modal -->
+<div class="modal fade" id="filePreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">معاينة الملف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="previewContent">
+                    <!-- Preview content will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                <button type="button" class="btn btn-primary" id="downloadBtn">
+                    <i class="fas fa-download me-2"></i>تحميل
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.file-manager-container {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-area:hover {
+    border-color: #007bff;
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.upload-area.dragover {
+    border-color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.upload-progress {
+    margin: 20px 0;
+}
+
+.files-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.files-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.file-item {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    background: white;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.file-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.file-thumbnail {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.file-icon {
+    width: 100%;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.file-info {
+    text-align: center;
+}
+
+.file-name {
+    font-weight: 500;
+    margin-bottom: 5px;
+    word-break: break-word;
+}
+
+.file-size {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.file-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.file-item:hover .file-actions {
+    opacity: 1;
+}
+
+.file-actions .btn {
+    margin-left: 5px;
+    padding: 5px 8px;
+}
+
+.file-category-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 0.75rem;
+}
+
+/* List view styles */
+.files-list .file-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+}
+
+.files-list .file-thumbnail,
+.files-list .file-icon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 0;
+    margin-left: 15px;
+    flex-shrink: 0;
+}
+
+.files-list .file-info {
+    text-align: right;
+    flex-grow: 1;
+}
+
+.files-list .file-actions {
+    position: static;
+    opacity: 1;
+    margin-right: 15px;
+}
+
+/* File type colors */
+.file-type-image { border-left: 4px solid #28a745; }
+.file-type-document { border-left: 4px solid #dc3545; }
+.file-type-spreadsheet { border-left: 4px solid #ffc107; }
+.file-type-archive { border-left: 4px solid #6f42c1; }
+.file-type-other { border-left: 4px solid #6c757d; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .files-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+    }
+    
+    .file-item {
+        padding: 10px;
+    }
+    
+    .file-thumbnail,
+    .file-icon {
+        height: 80px;
+    }
+}
+</style>
+
+<script>
+class FileManager {
+    constructor(containerId, options = {}) {
+        this.container = document.getElementById(containerId);
+        this.options = {
+            maxFileSize: 10 * 1024 * 1024, // 10MB
+            allowedTypes: ['image/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+            uploadUrl: '/api/upload',
+            viewMode: 'grid', // 'grid' or 'list'
+            ...options
+        };
+        
+        this.files = [];
+        this.init();
+    }
+    
+    init() {
+        this.setupEventListeners();
+        this.loadExistingFiles();
+    }
+    
+    setupEventListeners() {
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            this.handleFiles(e.dataTransfer.files);
+        });
+        
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            this.handleFiles(e.target.files);
+        });
+        
+        // Click to upload
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+    }
+    
+    handleFiles(fileList) {
+        Array.from(fileList).forEach(file => {
+            if (this.validateFile(file)) {
+                this.addFile(file);
+            }
+        });
+    }
+    
+    validateFile(file) {
+        // Check file size
+        if (file.size > this.options.maxFileSize) {
+            this.showError(`الملف "${file.name}" كبير جداً. الحد الأقصى 10MB`);
+            return false;
+        }
+        
+        // Check file type
+        const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip'];
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        
+        if (!allowedExtensions.includes(fileExtension)) {
+            this.showError(`نوع الملف "${fileExtension}" غير مسموح`);
+            return false;
+        }
+        
+        return true;
+    }
+    
+    addFile(file) {
+        const fileId = 'file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        
+        const fileObj = {
+            id: fileId,
+            file: file,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            category: this.getFileCategory(file.name),
+            uploaded: false,
+            progress: 0
+        };
+        
+        this.files.push(fileObj);
+        this.renderFile(fileObj);
+        this.updateFilesCount();
+        
+        // Start upload
+        this.uploadFile(fileObj);
+    }
+    
+    getFileCategory(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        
+        if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext)) return 'image';
+        if (['pdf', 'doc', 'docx', 'txt', 'rtf'].includes(ext)) return 'document';
+        if (['xls', 'xlsx', 'csv'].includes(ext)) return 'spreadsheet';
+        if (['zip', 'rar', '7z'].includes(ext)) return 'archive';
+        
+        return 'other';
+    }
+    
+    renderFile(fileObj) {
+        const filesGrid = document.getElementById('filesGrid');
+        const fileElement = document.createElement('div');
+        fileElement.className = `file-item file-type-${fileObj.category}`;
+        fileElement.id = fileObj.id;
+        
+        fileElement.innerHTML = `
+            <div class="file-category-badge">
+                <span class="badge bg-secondary">${this.getCategoryLabel(fileObj.category)}</span>
+            </div>
+            <div class="file-actions">
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="fileManager.previewFile('${fileObj.id}')">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="fileManager.removeFile('${fileObj.id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            ${this.getFilePreview(fileObj)}
+            <div class="file-info">
+                <div class="file-name">${fileObj.name}</div>
+                <div class="file-size">${this.formatFileSize(fileObj.size)}</div>
+                <div class="upload-progress-bar" style="display: none;">
+                    <div class="progress progress-sm mt-2">
+                        <div class="progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        filesGrid.appendChild(fileElement);
+    }
+    
+    getFilePreview(fileObj) {
+        if (fileObj.category === 'image') {
+            const url = URL.createObjectURL(fileObj.file);
+            return `<img src="${url}" class="file-thumbnail" alt="${fileObj.name}">`;
+        } else {
+            const icon = this.getFileIcon(fileObj.category);
+            return `<div class="file-icon"><i class="${icon} fa-3x text-muted"></i></div>`;
+        }
+    }
+    
+    getFileIcon(category) {
+        const icons = {
+            document: 'fas fa-file-alt',
+            spreadsheet: 'fas fa-file-excel',
+            archive: 'fas fa-file-archive',
+            other: 'fas fa-file'
+        };
+        
+        return icons[category] || 'fas fa-file';
+    }
+    
+    getCategoryLabel(category) {
+        const labels = {
+            image: 'صورة',
+            document: 'مستند',
+            spreadsheet: 'جدول',
+            archive: 'أرشيف',
+            other: 'أخرى'
+        };
+        
+        return labels[category] || 'ملف';
+    }
+    
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+    
+    uploadFile(fileObj) {
+        const formData = new FormData();
+        formData.append('file', fileObj.file);
+        formData.append('claim_id', this.options.claimId || '');
+        
+        const fileElement = document.getElementById(fileObj.id);
+        const progressBar = fileElement.querySelector('.upload-progress-bar');
+        const progressBarInner = fileElement.querySelector('.progress-bar');
+        
+        progressBar.style.display = 'block';
+        
+        fetch(this.options.uploadUrl, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                fileObj.uploaded = true;
+                fileObj.url = data.url;
+                fileObj.id = data.file_id;
+                progressBar.style.display = 'none';
+                this.showSuccess(`تم رفع "${fileObj.name}" بنجاح`);
+            } else {
+                this.showError(`فشل في رفع "${fileObj.name}": ${data.error}`);
+                this.removeFile(fileObj.id);
+            }
+        })
+        .catch(error => {
+            this.showError(`خطأ في رفع "${fileObj.name}"`);
+            this.removeFile(fileObj.id);
+        });
+    }
+    
+    removeFile(fileId) {
+        const fileIndex = this.files.findIndex(f => f.id === fileId);
+        if (fileIndex > -1) {
+            this.files.splice(fileIndex, 1);
+        }
+        
+        const fileElement = document.getElementById(fileId);
+        if (fileElement) {
+            fileElement.remove();
+        }
+        
+        this.updateFilesCount();
+    }
+    
+    previewFile(fileId) {
+        const fileObj = this.files.find(f => f.id === fileId);
+        if (!fileObj) return;
+        
+        const modal = new bootstrap.Modal(document.getElementById('filePreviewModal'));
+        const previewContent = document.getElementById('previewContent');
+        const downloadBtn = document.getElementById('downloadBtn');
+        
+        // Set modal title
+        document.querySelector('#filePreviewModal .modal-title').textContent = fileObj.name;
+        
+        // Set preview content
+        if (fileObj.category === 'image') {
+            const url = URL.createObjectURL(fileObj.file);
+            previewContent.innerHTML = `<img src="${url}" class="img-fluid" alt="${fileObj.name}">`;
+        } else {
+            const icon = this.getFileIcon(fileObj.category);
+            previewContent.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="${icon} fa-5x text-muted mb-3"></i>
+                    <h5>${fileObj.name}</h5>
+                    <p class="text-muted">${this.formatFileSize(fileObj.size)}</p>
+                </div>
+            `;
+        }
+        
+        // Set download button
+        downloadBtn.onclick = () => {
+            const url = URL.createObjectURL(fileObj.file);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileObj.name;
+            a.click();
+        };
+        
+        modal.show();
+    }
+    
+    updateFilesCount() {
+        document.getElementById('filesCount').textContent = this.files.length;
+    }
+    
+    clearAllFiles() {
+        if (this.files.length === 0) return;
+        
+        if (confirm('هل أنت متأكد من حذف جميع الملفات؟')) {
+            this.files = [];
+            document.getElementById('filesGrid').innerHTML = '';
+            this.updateFilesCount();
+        }
+    }
+    
+    toggleView() {
+        const filesGrid = document.getElementById('filesGrid');
+        const viewToggleIcon = document.getElementById('viewToggleIcon');
+        
+        if (this.options.viewMode === 'grid') {
+            this.options.viewMode = 'list';
+            filesGrid.className = 'files-list';
+            viewToggleIcon.className = 'fas fa-th';
+        } else {
+            this.options.viewMode = 'grid';
+            filesGrid.className = 'files-grid';
+            viewToggleIcon.className = 'fas fa-list';
+        }
+    }
+    
+    showError(message) {
+        // You can customize this to use your preferred notification system
+        alert(message);
+    }
+    
+    showSuccess(message) {
+        // You can customize this to use your preferred notification system
+        console.log(message);
+    }
+    
+    loadExistingFiles() {
+        // Load existing files if any
+        // This would typically fetch from the server
+    }
+}
+
+// Global functions for onclick handlers
+let fileManager;
+
+function toggleView() {
+    if (fileManager) fileManager.toggleView();
+}
+
+function clearAllFiles() {
+    if (fileManager) fileManager.clearAllFiles();
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // This will be initialized by the parent page
+});
+</script>

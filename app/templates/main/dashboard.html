@@ -2,6 +2,56 @@
 
 {% block title %}لوحة التحكم - نظام إدارة مطالبات التأمين{% endblock %}
 
+{% block extra_css %}
+<style>
+.dashboard-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.stat-card.success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.stat-card.warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-card.info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin: 20px 0;
+}
+
+.quick-action-btn {
+    border-radius: 10px;
+    padding: 15px;
+    margin: 5px;
+    transition: all 0.3s ease;
+}
+
+.quick-action-btn:hover {
+    transform: scale(1.05);
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="row">
@@ -112,7 +162,109 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- AI & Advanced Features Section -->
+    {% if current_user.is_admin() %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">
+                <i class="fas fa-robot text-primary me-2"></i>
+                المميزات المتقدمة والذكاء الاصطناعي
+            </h4>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- AI Classification Card -->
+        <div class="col-md-4">
+            <div class="card border-primary h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-brain me-2"></i>
+                        التصنيف الذكي
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">نظام ذكي لتصنيف المطالبات تلقائياً وكشف الاحتيال</p>
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <h5 class="text-primary" id="ai-classified-count">-</h5>
+                            <small class="text-muted">مطالبة مصنفة</small>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-warning" id="high-risk-count">-</h5>
+                            <small class="text-muted">عالية المخاطر</small>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('ai_classification.index') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-eye me-2"></i>عرض التفاصيل
+                    </a>
+                    <a href="{{ url_for('ai_classification.statistics') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-chart-bar me-2"></i>الإحصائيات
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Notifications Card -->
+        <div class="col-md-4">
+            <div class="card border-success h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bell me-2"></i>
+                        الإشعارات المتقدمة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">نظام إشعارات متطور يدعم عدة قنوات وإعدادات مخصصة</p>
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <h5 class="text-success" id="total-notifications">-</h5>
+                            <small class="text-muted">إجمالي الإشعارات</small>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-info" id="active-templates">-</h5>
+                            <small class="text-muted">قالب نشط</small>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('advanced_notifications.index') }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-eye me-2"></i>عرض الإشعارات
+                    </a>
+                    <a href="{{ url_for('advanced_notifications.send_notification') }}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-paper-plane me-2"></i>إرسال إشعار
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div class="col-md-4">
+            <div class="card border-info h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        إجراءات سريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">أدوات سريعة لإدارة النظام والمميزات المتقدمة</p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="runBatchClassification()">
+                            <i class="fas fa-magic me-2"></i>تصنيف تلقائي للمطالبات
+                        </button>
+                        <a href="{{ url_for('advanced_notifications.templates') }}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-template me-2"></i>إدارة قوالب الإشعارات
+                        </a>
+                        <a href="{{ url_for('ai_classification.pending_review') }}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-clock me-2"></i>مراجعة التصنيفات
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Recent Claims -->
     <div class="row">
         <div class="col-md-8">
@@ -141,7 +293,7 @@
                                     {% for claim in recent_claims %}
                                         <tr>
                                             <td>
-                                                <a href="{{ url_for('claims.view_claim', claim_id=claim.id) }}">
+                                                <a href="{{ url_for('claims.view', id=claim.id) }}">
                                                     {{ claim.id[:8] }}...
                                                 </a>
                                             </td>
@@ -195,7 +347,42 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- Charts Section -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card dashboard-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        توزيع المطالبات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="claimsDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card dashboard-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        اتجاه المطالبات (آخر 7 أيام)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="claimsTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Quick Actions -->
     <div class="row mt-4">
         <div class="col-12">
@@ -209,13 +396,19 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 mb-2">
-                            <a href="{{ url_for('claims.new_claim') }}" class="btn btn-primary w-100">
+                            <a href="{{ url_for('claims.new_with_ocr') }}" class="btn btn-success w-100">
+                                <i class="fas fa-robot me-2"></i>
+                                مطالبة جديدة مع AI
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('claims.new') }}" class="btn btn-primary w-100">
                                 <i class="fas fa-plus me-2"></i>
                                 مطالبة جديدة
                             </a>
                         </div>
                         <div class="col-md-3 mb-2">
-                            <a href="{{ url_for('main.claims_list') }}" class="btn btn-info w-100">
+                            <a href="{{ url_for('claims.index') }}" class="btn btn-info w-100">
                                 <i class="fas fa-list me-2"></i>
                                 جميع المطالبات
                             </a>
@@ -240,4 +433,188 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Load AI features statistics
+    loadAIStatistics();
+
+    function loadAIStatistics() {
+        // Load AI Classification stats
+        $.get('/ai-classification/api/statistics')
+            .done(function(response) {
+                if (response.success) {
+                    $('#ai-classified-count').text(response.total_classified || 0);
+                    $('#high-risk-count').text(response.high_risk_count || 0);
+                }
+            })
+            .fail(function() {
+                $('#ai-classified-count').text('0');
+                $('#high-risk-count').text('0');
+            });
+
+        // Load Notifications stats
+        $.get('/advanced-notifications/api/statistics')
+            .done(function(response) {
+                if (response.success) {
+                    $('#total-notifications').text(response.total_notifications || 0);
+                    $('#active-templates').text(response.active_templates || 0);
+                }
+            })
+            .fail(function() {
+                $('#total-notifications').text('0');
+                $('#active-templates').text('0');
+            });
+    }
+});
+
+// Quick Actions Functions
+function runBatchClassification() {
+    if (confirm('هل تريد تشغيل التصنيف التلقائي لجميع المطالبات غير المصنفة؟')) {
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري التصنيف...';
+        button.disabled = true;
+
+        $.post('/ai-classification/batch_classify')
+            .done(function(response) {
+                if (response.success) {
+                    showAlert('success', response.message);
+                    loadAIStatistics(); // Refresh stats
+                } else {
+                    showAlert('danger', 'حدث خطأ: ' + response.error);
+                }
+            })
+            .fail(function() {
+                showAlert('danger', 'حدث خطأ في الاتصال');
+            })
+            .always(function() {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+    }
+}
+
+function showAlert(type, message) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    $('.container-fluid').prepend(alertHtml);
+
+    // Auto dismiss after 5 seconds
+    setTimeout(function() {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+
+// Initialize charts
+let claimsDistributionChart, claimsTrendChart;
+
+$(document).ready(function() {
+    initializeCharts();
+    loadChartData();
+});
+
+function initializeCharts() {
+    // Claims Distribution Chart
+    const distributionCtx = document.getElementById('claimsDistributionChart');
+    if (distributionCtx) {
+        claimsDistributionChart = new Chart(distributionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['مرسل', 'جاهز', 'مسودة', 'فشل'],
+                datasets: [{
+                    data: [0, 0, 0, 0],
+                    backgroundColor: [
+                        '#28a745',
+                        '#007bff',
+                        '#ffc107',
+                        '#dc3545'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    // Claims Trend Chart
+    const trendCtx = document.getElementById('claimsTrendChart');
+    if (trendCtx) {
+        claimsTrendChart = new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'عدد المطالبات',
+                    data: [],
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+}
+
+function loadChartData() {
+    // Load distribution data
+    $.get('/reports/api/claims-by-status?days=30')
+        .done(function(data) {
+            if (claimsDistributionChart && data.labels && data.data) {
+                claimsDistributionChart.data.labels = data.labels;
+                claimsDistributionChart.data.datasets[0].data = data.data;
+                claimsDistributionChart.data.datasets[0].backgroundColor = data.colors || [
+                    '#28a745', '#007bff', '#ffc107', '#dc3545'
+                ];
+                claimsDistributionChart.update();
+            }
+        })
+        .fail(function() {
+            console.log('Failed to load distribution chart data');
+        });
+
+    // Load trend data
+    $.get('/reports/api/claims-timeline?days=7')
+        .done(function(data) {
+            if (claimsTrendChart && data.labels && data.claims_count) {
+                claimsTrendChart.data.labels = data.labels;
+                claimsTrendChart.data.datasets[0].data = data.claims_count;
+                claimsTrendChart.update();
+            }
+        })
+        .fail(function() {
+            console.log('Failed to load trend chart data');
+        });
+}
+</script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</script>
 {% endblock %}

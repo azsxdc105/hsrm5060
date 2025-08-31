@@ -1,0 +1,395 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة حقول {{ claim_type.name_ar }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .field-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+    }
+    
+    .field-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+    
+    .field-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        background: #f8f9fa;
+        border-radius: 15px 15px 0 0;
+    }
+    
+    .field-body {
+        padding: 1.5rem;
+    }
+    
+    .field-type-badge {
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .field-required {
+        color: #dc3545;
+        font-weight: bold;
+    }
+    
+    .field-optional {
+        color: #6c757d;
+    }
+    
+    .conditional-info {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 0.75rem;
+        border-radius: 0 8px 8px 0;
+        margin-top: 0.5rem;
+    }
+    
+    .drag-handle {
+        cursor: move;
+        color: #6c757d;
+        padding: 0.5rem;
+    }
+    
+    .drag-handle:hover {
+        color: #495057;
+    }
+    
+    .sortable-ghost {
+        opacity: 0.4;
+    }
+    
+    .add-field-card {
+        border: 2px dashed #dee2e6;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin-bottom: 1rem;
+    }
+    
+    .add-field-card:hover {
+        border-color: #007bff;
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a href="{{ url_for('dynamic_forms.manage_claim_types') }}">أنواع المطالبات</a>
+                            </li>
+                            <li class="breadcrumb-item active">{{ claim_type.name_ar }}</li>
+                        </ol>
+                    </nav>
+                    <h2>
+                        <i class="{{ claim_type.icon }} me-2" style="color: {{ claim_type.color }};"></i>
+                        حقول {{ claim_type.name_ar }}
+                    </h2>
+                    <p class="text-muted mb-0">{{ claim_type.description_ar }}</p>
+                </div>
+                <div>
+                    <button class="btn btn-success me-2" onclick="addNewField()">
+                        <i class="fas fa-plus me-2"></i>إضافة حقل جديد
+                    </button>
+                    <a href="{{ url_for('dynamic_forms.manage_claim_types') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>العودة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-primary">{{ fields|length }}</h3>
+                    <p class="text-muted mb-0">إجمالي الحقول</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-success">{{ fields|selectattr('active')|list|length }}</h3>
+                    <p class="text-muted mb-0">الحقول النشطة</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-warning">{{ fields|selectattr('required')|list|length }}</h3>
+                    <p class="text-muted mb-0">الحقول المطلوبة</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-info">{{ fields|selectattr('conditional_field')|list|length }}</h3>
+                    <p class="text-muted mb-0">الحقول الشرطية</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fields List -->
+    <div class="row">
+        <div class="col-12">
+            <div id="fields-container">
+                {% for field in fields %}
+                <div class="field-card" data-field-id="{{ field.id }}">
+                    <div class="field-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="drag-handle">
+                                    <i class="fas fa-grip-vertical"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">{{ field.label_ar }}</h6>
+                                    <small class="text-muted">{{ field.field_name }}</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                {% if field.required %}
+                                    <span class="field-required">مطلوب</span>
+                                {% else %}
+                                    <span class="field-optional">اختياري</span>
+                                {% endif %}
+                                
+                                {% set type_colors = {
+                                    'text': 'primary',
+                                    'email': 'info',
+                                    'number': 'success',
+                                    'date': 'warning',
+                                    'select': 'secondary',
+                                    'checkbox': 'dark',
+                                    'textarea': 'purple'
+                                } %}
+                                <span class="badge bg-{{ type_colors.get(field.field_type, 'secondary') }} field-type-badge">
+                                    {{ field.field_type }}
+                                </span>
+                                
+                                {% if field.active %}
+                                    <span class="badge bg-success">نشط</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">غير نشط</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="field-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <p class="text-muted mb-2">{{ field.label_en }}</p>
+                                
+                                {% if field.placeholder %}
+                                <p class="mb-1"><strong>النص التوضيحي:</strong> {{ field.placeholder }}</p>
+                                {% endif %}
+                                
+                                {% if field.options and field.field_type == 'select' %}
+                                <div class="mb-2">
+                                    <strong>الخيارات:</strong>
+                                    <div class="mt-1">
+                                        {% for option in field.options.split('|') %}
+                                            <span class="badge bg-light text-dark me-1">{{ option }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if field.conditional_field %}
+                                <div class="conditional-info">
+                                    <strong><i class="fas fa-code-branch me-1"></i>حقل شرطي:</strong>
+                                    يظهر عند: {{ field.conditional_field }} = {{ field.conditional_value }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="d-flex flex-column gap-2">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="editField({{ field.id }})">
+                                        <i class="fas fa-edit me-1"></i>تعديل
+                                    </button>
+                                    <button class="btn btn-outline-warning btn-sm" onclick="toggleFieldStatus({{ field.id }})">
+                                        <i class="fas fa-{{ 'eye-slash' if field.active else 'eye' }} me-1"></i>
+                                        {{ 'إلغاء تفعيل' if field.active else 'تفعيل' }}
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteField({{ field.id }})">
+                                        <i class="fas fa-trash me-1"></i>حذف
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                الترتيب: {{ field.field_order }} | 
+                                تم الإنشاء: {{ field.created_at.strftime('%Y-%m-%d') }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <!-- Add New Field Card -->
+                <div class="add-field-card" onclick="addNewField()">
+                    <div class="text-muted">
+                        <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                        <h5>إضافة حقل جديد</h5>
+                        <p class="mb-0">انقر لإضافة حقل جديد لهذا النوع من المطالبات</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Field Edit Modal -->
+<div class="modal fade" id="fieldModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تعديل الحقل</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="fieldForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">اسم الحقل بالعربية</label>
+                                <input type="text" class="form-control" id="labelAr" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">اسم الحقل بالإنجليزية</label>
+                                <input type="text" class="form-control" id="labelEn" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">اسم الحقل التقني</label>
+                                <input type="text" class="form-control" id="fieldName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">نوع الحقل</label>
+                                <select class="form-control" id="fieldType" required>
+                                    <option value="text">نص</option>
+                                    <option value="email">بريد إلكتروني</option>
+                                    <option value="number">رقم</option>
+                                    <option value="date">تاريخ</option>
+                                    <option value="select">قائمة اختيار</option>
+                                    <option value="checkbox">مربع اختيار</option>
+                                    <option value="textarea">نص طويل</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">النص التوضيحي</label>
+                        <input type="text" class="form-control" id="placeholder">
+                    </div>
+                    
+                    <div class="mb-3" id="optionsDiv" style="display: none;">
+                        <label class="form-label">الخيارات (مفصولة بـ |)</label>
+                        <input type="text" class="form-control" id="options" placeholder="خيار1|خيار2|خيار3">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="required">
+                                <label class="form-check-label">مطلوب</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="active" checked>
+                                <label class="form-check-label">نشط</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="saveField()">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentFieldId = null;
+
+function addNewField() {
+    currentFieldId = null;
+    document.getElementById('fieldForm').reset();
+    document.getElementById('active').checked = true;
+    new bootstrap.Modal(document.getElementById('fieldModal')).show();
+}
+
+function editField(fieldId) {
+    currentFieldId = fieldId;
+    // هنا يمكن تحميل بيانات الحقل من الخادم
+    new bootstrap.Modal(document.getElementById('fieldModal')).show();
+}
+
+function saveField() {
+    // هنا يمكن إرسال البيانات للخادم
+    alert('سيتم إضافة وظيفة الحفظ قريباً');
+}
+
+function toggleFieldStatus(fieldId) {
+    if (confirm('هل تريد تغيير حالة هذا الحقل؟')) {
+        // هنا يمكن إرسال طلب تغيير الحالة
+        alert('سيتم إضافة وظيفة تغيير الحالة قريباً');
+    }
+}
+
+function deleteField(fieldId) {
+    if (confirm('هل أنت متأكد من حذف هذا الحقل؟')) {
+        // هنا يمكن إرسال طلب الحذف
+        alert('سيتم إضافة وظيفة الحذف قريباً');
+    }
+}
+
+// Show/hide options field based on field type
+document.getElementById('fieldType').addEventListener('change', function() {
+    const optionsDiv = document.getElementById('optionsDiv');
+    if (this.value === 'select') {
+        optionsDiv.style.display = 'block';
+    } else {
+        optionsDiv.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

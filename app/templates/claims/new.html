@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}مطالبة جديدة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-plus me-2"></i>
+                    مطالبة جديدة
+                </h1>
+                <div>
+                    <a href="{{ url_for('claims.new_with_ocr') }}" class="btn btn-success me-2">
+                        <i class="fas fa-robot me-2"></i>
+                        استخدام الذكاء الاصطناعي
+                    </a>
+                    <a href="{{ url_for('claims.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة للمطالبات
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        بيانات المطالبة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Client Information -->
+                        <h6 class="text-primary mb-3">
+                            <i class="fas fa-user me-2"></i>
+                            بيانات العميل
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.client_name.label(class="form-label") }}
+                                {{ form.client_name(class="form-control") }}
+                                {% if form.client_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.client_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.client_national_id.label(class="form-label") }}
+                                {{ form.client_national_id(class="form-control", pattern="[0-9]{10}", maxlength="10") }}
+                                {% if form.client_national_id.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.client_national_id.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Insurance Information -->
+                        <h6 class="text-primary mb-3 mt-4">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            بيانات التأمين
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.company_id.label(class="form-label") }}
+                                {{ form.company_id(class="form-select") }}
+                                {% if form.company_id.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.company_id.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.policy_number.label(class="form-label") }}
+                                {{ form.policy_number(class="form-control") }}
+                                {% if form.policy_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.policy_number.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Incident Information -->
+                        <h6 class="text-primary mb-3 mt-4">
+                            <i class="fas fa-car-crash me-2"></i>
+                            بيانات الحادث
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.incident_number.label(class="form-label") }}
+                                {{ form.incident_number(class="form-control") }}
+                                {% if form.incident_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.incident_number.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.incident_date.label(class="form-label") }}
+                                {{ form.incident_date(class="form-control") }}
+                                {% if form.incident_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.incident_date.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.claim_amount.label(class="form-label") }}
+                                {{ form.claim_amount(class="form-control", step="0.01", min="0") }}
+                                {% if form.claim_amount.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.claim_amount.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.coverage_type.label(class="form-label") }}
+                                {{ form.coverage_type(class="form-select") }}
+                                {% if form.coverage_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.coverage_type.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.city.label(class="form-label") }}
+                                {{ form.city(class="form-control") }}
+                                {% if form.city.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.city.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.tags.label(class="form-label") }}
+                                {{ form.tags(class="form-control", placeholder="مثال: حادث، سيارة، تصادم") }}
+                                {% if form.tags.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.tags.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.claim_details.label(class="form-label") }}
+                            {{ form.claim_details(class="form-control", rows="4") }}
+                            {% if form.claim_details.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.claim_details.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- File Upload -->
+                        <h6 class="text-primary mb-3 mt-4">
+                            <i class="fas fa-paperclip me-2"></i>
+                            المرفقات
+                        </h6>
+                        
+                        <div class="mb-3">
+                            {{ form.files.label(class="form-label") }}
+                            {{ form.files(class="form-control", multiple=True, accept="image/*,.pdf") }}
+                            {% if form.files.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.files.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                يمكنك رفع صور (JPG, PNG) أو ملفات PDF. الحد الأقصى 25 ميجابايت لكل ملف.
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('claims.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                حفظ المطالبة
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const nationalIdField = document.getElementById('client_national_id');
+    
+    // National ID validation
+    if (nationalIdField) {
+        nationalIdField.addEventListener('input', function() {
+            const value = this.value;
+            if (value.length === 10 && /^\d+$/.test(value)) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else if (value.length > 0) {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-valid', 'is-invalid');
+            }
+        });
+    }
+    
+    // File size validation
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const maxSize = 25 * 1024 * 1024; // 25MB
+            let totalSize = 0;
+            
+            for (let file of this.files) {
+                totalSize += file.size;
+                if (file.size > maxSize) {
+                    alert(`الملف ${file.name} كبير جداً. الحد الأقصى 25 ميجابايت.`);
+                    this.value = '';
+                    return;
+                }
+            }
+            
+            if (totalSize > 100 * 1024 * 1024) { // 100MB total
+                alert('إجمالي حجم الملفات كبير جداً. الحد الأقصى 100 ميجابايت.');
+                this.value = '';
+                return;
+            }
+        });
+    }
+    
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري الحفظ...';
+    });
+});
+</script>
+{% endblock %}

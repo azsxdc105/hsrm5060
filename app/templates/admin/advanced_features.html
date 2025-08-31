@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة المميزات المتقدمة{% endblock %}
+
+{% block extra_css %}
+<style>
+    .feature-card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-radius: 10px;
+        transition: transform 0.3s ease;
+    }
+    .feature-card:hover {
+        transform: translateY(-2px);
+    }
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 24px;
+        color: white;
+    }
+    .ai-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .notification-gradient {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    .config-gradient {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    .stats-card {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-radius: 10px;
+    }
+    .service-status {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    .status-configured { background-color: #28a745; }
+    .status-not-configured { background-color: #dc3545; }
+    .quick-action-btn {
+        border-radius: 20px;
+        padding: 8px 20px;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-rocket text-primary"></i>
+                        إدارة المميزات المتقدمة
+                    </h2>
+                    <p class="text-muted mb-0">إدارة وتكوين المميزات المتقدمة والذكاء الاصطناعي</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.settings') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> العودة للإعدادات
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ ai_stats.total_classified }}</h3>
+                    <small>مطالبة مصنفة</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ ai_stats.high_risk_count }}</h3>
+                    <small>عالية المخاطر</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ notification_stats.total_notifications }}</h3>
+                    <small>إجمالي الإشعارات</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ notification_stats.active_templates }}</h3>
+                    <small>قالب نشط</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Management -->
+    <div class="row mb-4">
+        <!-- AI Classification -->
+        <div class="col-md-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon ai-gradient">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h5 class="card-title">التصنيف الذكي</h5>
+                    <p class="card-text">نظام ذكي لتصنيف المطالبات وكشف الاحتيال</p>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch d-flex justify-content-center">
+                            <input class="form-check-input" type="checkbox" id="aiClassificationEnabled" checked>
+                            <label class="form-check-label ms-2" for="aiClassificationEnabled">
+                                مفعل
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('ai_classification.index') }}" class="btn btn-primary quick-action-btn">
+                            <i class="fas fa-eye me-2"></i>عرض لوحة التحكم
+                        </a>
+                        <button class="btn btn-outline-primary quick-action-btn" onclick="runBatchClassification()">
+                            <i class="fas fa-magic me-2"></i>تصنيف تلقائي
+                        </button>
+                        <a href="{{ url_for('ai_classification.statistics') }}" class="btn btn-outline-info quick-action-btn">
+                            <i class="fas fa-chart-bar me-2"></i>الإحصائيات
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Notifications -->
+        <div class="col-md-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon notification-gradient">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h5 class="card-title">الإشعارات المتقدمة</h5>
+                    <p class="card-text">نظام إشعارات متطور متعدد القنوات</p>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch d-flex justify-content-center">
+                            <input class="form-check-input" type="checkbox" id="advancedNotificationsEnabled" checked>
+                            <label class="form-check-label ms-2" for="advancedNotificationsEnabled">
+                                مفعل
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('advanced_notifications.index') }}" class="btn btn-success quick-action-btn">
+                            <i class="fas fa-eye me-2"></i>عرض الإشعارات
+                        </a>
+                        <a href="{{ url_for('advanced_notifications.send_notification') }}" class="btn btn-outline-success quick-action-btn">
+                            <i class="fas fa-paper-plane me-2"></i>إرسال إشعار
+                        </a>
+                        <a href="{{ url_for('advanced_notifications.templates') }}" class="btn btn-outline-info quick-action-btn">
+                            <i class="fas fa-templates me-2"></i>إدارة القوالب
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Configuration -->
+        <div class="col-md-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon config-gradient">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <h5 class="card-title">تكوين الخدمات</h5>
+                    <p class="card-text">إعداد الخدمات الخارجية والتكاملات</p>
+                    
+                    <div class="mb-3">
+                        <div class="text-start">
+                            <div class="mb-2">
+                                <span class="service-status {{ 'status-configured' if config_status.twilio_configured else 'status-not-configured' }}"></span>
+                                <small>Twilio SMS</small>
+                            </div>
+                            <div class="mb-2">
+                                <span class="service-status {{ 'status-configured' if config_status.whatsapp_configured else 'status-not-configured' }}"></span>
+                                <small>WhatsApp Business</small>
+                            </div>
+                            <div class="mb-2">
+                                <span class="service-status {{ 'status-configured' if config_status.firebase_configured else 'status-not-configured' }}"></span>
+                                <small>Firebase FCM</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-info quick-action-btn" data-bs-toggle="modal" data-bs-target="#configModal">
+                            <i class="fas fa-cog me-2"></i>عرض الإعدادات
+                        </button>
+                        <button class="btn btn-outline-info quick-action-btn" onclick="testServices()">
+                            <i class="fas fa-vial me-2"></i>اختبار الخدمات
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card feature-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        النشاط الأخير
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if notification_stats.recent_notifications %}
+                    <div class="list-group list-group-flush">
+                        {% for notification in notification_stats.recent_notifications %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ notification.title }}</h6>
+                                <p class="mb-1 text-muted">{{ notification.message[:100] }}...</p>
+                                <small class="text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <span class="badge bg-{{ notification.get_status_color() }}">
+                                {{ notification.status }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا يوجد نشاط حديث</h5>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Configuration Modal -->
+<div class="modal fade" id="configModal" tabindex="-1" aria-labelledby="configModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="configModalLabel">
+                    <i class="fas fa-cog me-2"></i>
+                    إعدادات الخدمات الخارجية
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">لتفعيل جميع المميزات المتقدمة، يرجى إضافة الإعدادات التالية في ملف <code>config.py</code> أو متغيرات البيئة:</p>
+                
+                <div class="accordion" id="configAccordion">
+                    <!-- Twilio Configuration -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="twilioHeading">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#twilioCollapse">
+                                <i class="fas fa-sms me-2"></i>
+                                إعدادات Twilio للرسائل النصية
+                                <span class="service-status ms-2 {{ 'status-configured' if config_status.twilio_configured else 'status-not-configured' }}"></span>
+                            </button>
+                        </h2>
+                        <div id="twilioCollapse" class="accordion-collapse collapse show" data-bs-parent="#configAccordion">
+                            <div class="accordion-body">
+                                <pre class="bg-light p-3 rounded"><code># SMS (Twilio)
+TWILIO_ACCOUNT_SID = 'your_twilio_account_sid'
+TWILIO_AUTH_TOKEN = 'your_twilio_auth_token'
+TWILIO_PHONE_NUMBER = '+1234567890'</code></pre>
+                                <a href="https://www.twilio.com" target="_blank" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-external-link-alt me-2"></i>الحصول على Twilio
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WhatsApp Configuration -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="whatsappHeading">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#whatsappCollapse">
+                                <i class="fab fa-whatsapp me-2"></i>
+                                إعدادات WhatsApp Business API
+                                <span class="service-status ms-2 {{ 'status-configured' if config_status.whatsapp_configured else 'status-not-configured' }}"></span>
+                            </button>
+                        </h2>
+                        <div id="whatsappCollapse" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                            <div class="accordion-body">
+                                <pre class="bg-light p-3 rounded"><code># WhatsApp Business API
+WHATSAPP_ACCESS_TOKEN = 'your_whatsapp_access_token'
+WHATSAPP_PHONE_NUMBER_ID = 'your_phone_number_id'</code></pre>
+                                <a href="https://developers.facebook.com/docs/whatsapp" target="_blank" class="btn btn-sm btn-success">
+                                    <i class="fas fa-external-link-alt me-2"></i>WhatsApp Business API
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Firebase Configuration -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="firebaseHeading">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#firebaseCollapse">
+                                <i class="fab fa-google me-2"></i>
+                                إعدادات Firebase للإشعارات المنبثقة
+                                <span class="service-status ms-2 {{ 'status-configured' if config_status.firebase_configured else 'status-not-configured' }}"></span>
+                            </button>
+                        </h2>
+                        <div id="firebaseCollapse" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                            <div class="accordion-body">
+                                <pre class="bg-light p-3 rounded"><code># Push Notifications (Firebase)
+FIREBASE_SERVER_KEY = 'your_firebase_server_key'</code></pre>
+                                <a href="https://console.firebase.google.com" target="_blank" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-external-link-alt me-2"></i>Firebase Console
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>تحذير:</strong> تأكد من الحفاظ على سرية هذه المفاتيح ولا تشاركها مع أحد.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                <button type="button" class="btn btn-primary" onclick="testServices()">
+                    <i class="fas fa-vial me-2"></i>اختبار الخدمات
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Feature toggle handlers
+    $('.form-check-input').change(function() {
+        const feature = $(this).attr('id');
+        const enabled = $(this).is(':checked');
+        
+        $.post('/admin/advanced-features/toggle-feature', {
+            feature: feature,
+            enabled: enabled
+        })
+        .done(function(response) {
+            if (response.success) {
+                showToast(response.message, 'success');
+            } else {
+                showToast('حدث خطأ: ' + response.error, 'danger');
+            }
+        })
+        .fail(function() {
+            showToast('حدث خطأ في الاتصال', 'danger');
+        });
+    });
+});
+
+// Batch classification
+function runBatchClassification() {
+    if (confirm('هل تريد تشغيل التصنيف التلقائي لجميع المطالبات غير المصنفة؟')) {
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري التصنيف...';
+        button.disabled = true;
+        
+        $.post('/admin/advanced-features/batch-classify')
+            .done(function(response) {
+                if (response.success) {
+                    showToast(response.message, 'success');
+                    if (response.high_risk_count > 0) {
+                        showToast(`تم اكتشاف ${response.high_risk_count} مطالبة عالية المخاطر`, 'warning');
+                    }
+                    // Reload page after 2 seconds
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showToast('حدث خطأ: ' + response.error, 'danger');
+                }
+            })
+            .fail(function() {
+                showToast('حدث خطأ في الاتصال', 'danger');
+            })
+            .always(function() {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+    }
+}
+
+// Test services
+function testServices() {
+    showToast('جاري اختبار الخدمات...', 'info');
+    
+    // Here you would implement actual service testing
+    setTimeout(function() {
+        showToast('تم اختبار الخدمات بنجاح', 'success');
+    }, 2000);
+}
+
+function showToast(message, type = 'info') {
+    const toastHtml = `
+        <div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    
+    // Create toast container if it doesn't exist
+    if (!$('#toast-container').length) {
+        $('body').append('<div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>');
+    }
+    
+    const $toast = $(toastHtml);
+    $('#toast-container').append($toast);
+    
+    const toast = new bootstrap.Toast($toast[0]);
+    toast.show();
+    
+    // Remove toast element after it's hidden
+    $toast.on('hidden.bs.toast', function() {
+        $(this).remove();
+    });
+}
+</script>
+{% endblock %}

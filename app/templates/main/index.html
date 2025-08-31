@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}الصفحة الرئيسية{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">مرحباً بك في نظام إدارة مطالبات التأمين</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-info"><i class="fas fa-file-alt"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">إجمالي المطالبات</span>
+                                    <span class="info-box-number">{{ total_claims or 0 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-success"><i class="fas fa-check"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">المطالبات المرسلة</span>
+                                    <span class="info-box-number">{{ sent_claims or 0 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4>الإجراءات السريعة</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <a href="{{ url_for('claims.new') }}" class="btn btn-primary btn-block">
+                                                <i class="fas fa-plus"></i> مطالبة جديدة
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <a href="{{ url_for('claims.index') }}" class="btn btn-info btn-block">
+                                                <i class="fas fa-list"></i> عرض المطالبات
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <a href="{{ url_for('reports.index') }}" class="btn btn-success btn-block">
+                                                <i class="fas fa-chart-bar"></i> التقارير
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <a href="{{ url_for('admin.index') }}" class="btn btn-warning btn-block">
+                                                <i class="fas fa-cog"></i> الإدارة
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

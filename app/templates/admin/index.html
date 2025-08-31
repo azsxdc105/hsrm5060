@@ -93,9 +93,9 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-2 mb-2">
-                            <a href="{{ url_for('admin.new_user') }}" class="btn btn-primary w-100">
+                            <a href="{{ url_for('admin.users') }}" class="btn btn-primary w-100">
                                 <i class="fas fa-user-plus me-2"></i>
-                                مستخدم جديد
+                                إدارة المستخدمين
                             </a>
                         </div>
                         <div class="col-md-2 mb-2">
@@ -130,6 +130,30 @@
                                 </button>
                             </form>
                         </div>
+                        <div class="col-md-2 mb-2">
+                            <a href="{{ url_for('admin.ocr_test') }}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-eye me-2"></i>
+                                اختبار OCR
+                            </a>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <a href="{{ url_for('admin.api_documentation') }}" class="btn btn-outline-success w-100">
+                                <i class="fas fa-code me-2"></i>
+                                API Documentation
+                            </a>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <a href="{{ url_for('admin.security_dashboard') }}" class="btn btn-outline-danger w-100">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                لوحة تحكم الأمان
+                            </a>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <a href="{{ url_for('admin.backup_management') }}" class="btn btn-outline-warning w-100">
+                                <i class="fas fa-hdd me-2"></i>
+                                النسخ الاحتياطي
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -162,7 +186,7 @@
                                     {% for claim in recent_claims %}
                                         <tr>
                                             <td>
-                                                <a href="{{ url_for('claims.view_claim', claim_id=claim.id) }}">
+                                                <a href="{{ url_for('claims.view', id=claim.id) }}">
                                                     {{ claim.id[:8] }}...
                                                 </a>
                                             </td>

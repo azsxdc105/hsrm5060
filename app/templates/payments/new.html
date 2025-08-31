@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}إضافة مدفوعة جديدة - نظام إدارة مطالبات التأمين{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-plus me-2"></i>
+                    إضافة مدفوعة جديدة
+                </h1>
+                <a href="{{ url_for('payments.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>العودة
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Payment Form -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        معلومات المدفوعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.amount.label(class="form-label") }}
+                                    {{ form.amount(class="form-control") }}
+                                    {% if form.amount.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.amount.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.currency.label(class="form-label") }}
+                                    {{ form.currency(class="form-select") }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.payment_method.label(class="form-label") }}
+                                    {{ form.payment_method(class="form-select", onchange="togglePaymentFields()") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.status.label(class="form-label") }}
+                                    {{ form.status(class="form-select") }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.payment_date.label(class="form-label") }}
+                                    {{ form.payment_date(class="form-control") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.received_date.label(class="form-label") }}
+                                    {{ form.received_date(class="form-control") }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.payment_reference.label(class="form-label") }}
+                            {{ form.payment_reference(class="form-control") }}
+                        </div>
+                        
+                        <!-- Bank Transfer Fields -->
+                        <div id="bank-fields" style="display: none;">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-university me-2"></i>
+                                تفاصيل التحويل البنكي
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.bank_name.label(class="form-label") }}
+                                        {{ form.bank_name(class="form-control") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.account_number.label(class="form-label") }}
+                                        {{ form.account_number(class="form-control") }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                {{ form.iban.label(class="form-label") }}
+                                {{ form.iban(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <!-- Check Fields -->
+                        <div id="check-fields" style="display: none;">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-money-check me-2"></i>
+                                تفاصيل الشيك
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.check_number.label(class="form-label") }}
+                                        {{ form.check_number(class="form-control") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.check_bank.label(class="form-label") }}
+                                        {{ form.check_bank(class="form-control") }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Online Payment Fields -->
+                        <div id="online-fields" style="display: none;">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-credit-card me-2"></i>
+                                تفاصيل الدفع الإلكتروني
+                            </h6>
+                            <div class="mb-3">
+                                {{ form.transaction_id.label(class="form-label") }}
+                                {{ form.transaction_id(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.notes.label(class="form-label") }}
+                            {{ form.notes(class="form-control", rows="3") }}
+                        </div>
+                        
+                        <div class="d-flex justify-content-end">
+                            <a href="{{ url_for('payments.index') }}" class="btn btn-secondary me-2">إلغاء</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Claim Info -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-alt me-2"></i>
+                        معلومات المطالبة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless table-sm">
+                        <tr>
+                            <td><strong>رقم المطالبة:</strong></td>
+                            <td>{{ claim.id[:8] }}...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>العميل:</strong></td>
+                            <td>{{ claim.client_name }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>شركة التأمين:</strong></td>
+                            <td>{{ claim.insurance_company.name_ar }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>مبلغ المطالبة:</strong></td>
+                            <td><span class="text-success fw-bold">{{ claim.claim_amount }} {{ claim.currency }}</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>الحالة:</strong></td>
+                            <td>
+                                <span class="badge bg-{{ claim.get_status_color() }}">
+                                    {{ claim.get_status_text_ar() }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>تاريخ الحادث:</strong></td>
+                            <td>{{ claim.incident_date.strftime('%Y-%m-%d') if claim.incident_date else '-' }}</td>
+                        </tr>
+                    </table>
+                    
+                    <div class="mt-3">
+                        <a href="{{ url_for('claims.view', id=claim.id) }}" class="btn btn-outline-primary btn-sm w-100">
+                            <i class="fas fa-eye me-2"></i>عرض المطالبة
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Existing Payments -->
+            {% if claim.payments %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        المدفوعات السابقة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for payment in claim.payments %}
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                        <div>
+                            <small class="text-muted">{{ payment.payment_date.strftime('%Y-%m-%d') }}</small><br>
+                            <strong>{{ payment.amount }} {{ payment.currency }}</strong>
+                        </div>
+                        <span class="badge bg-{{ payment.get_status_color() }}">
+                            {{ payment.get_status_text_ar() }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePaymentFields() {
+    const paymentMethod = document.querySelector('select[name="payment_method"]').value;
+    
+    // Hide all method-specific fields
+    document.getElementById('bank-fields').style.display = 'none';
+    document.getElementById('check-fields').style.display = 'none';
+    document.getElementById('online-fields').style.display = 'none';
+    
+    // Show relevant fields based on payment method
+    if (paymentMethod === 'bank_transfer') {
+        document.getElementById('bank-fields').style.display = 'block';
+    } else if (paymentMethod === 'check') {
+        document.getElementById('check-fields').style.display = 'block';
+    } else if (paymentMethod === 'online') {
+        document.getElementById('online-fields').style.display = 'block';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    togglePaymentFields();
+});
+</script>
+{% endblock %}

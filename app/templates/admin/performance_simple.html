@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}مراقبة الأداء{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    مراقبة الأداء
+                </h1>
+                <a href="{{ url_for('admin.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    العودة للوحة الإدارة
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Performance Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ "%.1f"|format(system_stats.cpu_percent) }}%</h4>
+                            <p class="mb-0">استخدام المعالج</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-microchip fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ "%.1f"|format(system_stats.memory_percent) }}%</h4>
+                            <p class="mb-0">استخدام الذاكرة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-memory fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ "%.1f"|format(system_stats.disk_usage) }}%</h4>
+                            <p class="mb-0">استخدام القرص</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-hdd fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ system_stats.timestamp.strftime('%H:%M') }}</h4>
+                            <p class="mb-0">آخر تحديث</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-database me-2"></i>
+                        إحصائيات قاعدة البيانات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h3 class="text-primary">{{ db_stats.total_claims }}</h3>
+                            <p class="mb-0">المطالبات</p>
+                        </div>
+                        <div class="col-4">
+                            <h3 class="text-info">{{ db_stats.total_users }}</h3>
+                            <p class="mb-0">المستخدمين</p>
+                        </div>
+                        <div class="col-4">
+                            <h3 class="text-success">{{ db_stats.total_companies }}</h3>
+                            <p class="mb-0">الشركات</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-heartbeat me-2"></i>
+                        حالة النظام
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-3">
+                            <i class="fas fa-circle text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">قاعدة البيانات</h6>
+                            <small class="text-muted">متصلة وتعمل</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-3">
+                            <i class="fas fa-circle text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">خادم الويب</h6>
+                            <small class="text-muted">يعمل بشكل طبيعي</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-circle text-warning"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">OCR</h6>
+                            <small class="text-muted">متاح جزئياً</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tools me-2"></i>
+                        أدوات الصيانة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="refreshStats()">
+                            <i class="fas fa-sync me-2"></i>
+                            تحديث الإحصائيات
+                        </button>
+                        <button class="btn btn-outline-info btn-sm" onclick="checkOCRStatus()">
+                            <i class="fas fa-eye me-2"></i>
+                            فحص حالة OCR
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="testEmailSettings()">
+                            <i class="fas fa-envelope me-2"></i>
+                            اختبار البريد الإلكتروني
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Chart Placeholder -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        مراقبة الأداء المباشر
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>ملاحظة:</strong> مراقبة الأداء المتقدمة قيد التطوير. 
+                        يمكنك استخدام الأدوات أعلاه لفحص حالة النظام الحالية.
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h5 class="text-primary">{{ system_stats.timestamp.strftime('%Y-%m-%d') }}</h5>
+                                <p class="mb-0">تاريخ اليوم</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h5 class="text-info">Flask</h5>
+                                <p class="mb-0">إطار العمل</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h5 class="text-success">SQLite</h5>
+                                <p class="mb-0">قاعدة البيانات</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h5 class="text-warning">Python 3.12</h5>
+                                <p class="mb-0">إصدار Python</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function refreshStats() {
+    location.reload();
+}
+
+function checkOCRStatus() {
+    window.open('/admin/ocr-test', '_blank');
+}
+
+function testEmailSettings() {
+    window.open('/admin/email-settings', '_blank');
+}
+
+// Auto-refresh every 30 seconds
+setInterval(function() {
+    // Update timestamp only
+    document.querySelector('.card.bg-success h4').textContent = new Date().toLocaleTimeString('ar-SA', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}, 30000);
+</script>
+{% endblock %}

@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}إعدادات الإشعارات المتقدمة{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-radius: 10px;
+    }
+    .settings-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .form-switch .form-check-input {
+        width: 3rem;
+        height: 1.5rem;
+    }
+    .notification-type-card {
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+    .notification-type-card.enabled {
+        border-color: #28a745;
+        background-color: #f8fff9;
+    }
+    .notification-type-card.disabled {
+        border-color: #dc3545;
+        background-color: #fff8f8;
+    }
+    .time-input {
+        max-width: 150px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-cog text-primary"></i>
+                        إعدادات الإشعارات المتقدمة
+                    </h2>
+                    <p class="text-muted mb-0">تخصيص إعدادات الإشعارات حسب تفضيلاتك</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('advanced_notifications.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> العودة للإشعارات
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        
+        <div class="row">
+            <!-- Global Settings -->
+            <div class="col-md-6">
+                <div class="card settings-card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-globe me-2"></i>
+                            الإعدادات العامة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Email Notifications -->
+                        <div class="notification-type-card" id="email-card">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-envelope text-primary me-2"></i>
+                                        البريد الإلكتروني
+                                    </h6>
+                                    <small class="text-muted">إشعارات عبر البريد الإلكتروني</small>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.email_enabled(class="form-check-input", id="email_enabled") }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SMS Notifications -->
+                        <div class="notification-type-card" id="sms-card">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-sms text-success me-2"></i>
+                                        الرسائل النصية
+                                    </h6>
+                                    <small class="text-muted">إشعارات عبر الرسائل النصية</small>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.sms_enabled(class="form-check-input", id="sms_enabled") }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Push Notifications -->
+                        <div class="notification-type-card" id="push-card">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-bell text-warning me-2"></i>
+                                        الإشعارات المنبثقة
+                                    </h6>
+                                    <small class="text-muted">إشعارات منبثقة في المتصفح</small>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.push_enabled(class="form-check-input", id="push_enabled") }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- WhatsApp Notifications -->
+                        <div class="notification-type-card" id="whatsapp-card">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h6 class="mb-0">
+                                        <i class="fab fa-whatsapp text-success me-2"></i>
+                                        واتساب
+                                    </h6>
+                                    <small class="text-muted">إشعارات عبر واتساب</small>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.whatsapp_enabled(class="form-check-input", id="whatsapp_enabled") }}
+                                </div>
+                            </div>
+                            <div class="mt-2" id="whatsapp-phone-group" style="display: none;">
+                                {{ form.whatsapp_phone.label(class="form-label") }}
+                                {{ form.whatsapp_phone(class="form-control") }}
+                                <small class="text-muted">مثال: +966501234567</small>
+                            </div>
+                        </div>
+
+                        <!-- In-App Notifications -->
+                        <div class="notification-type-card" id="inapp-card">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-desktop text-info me-2"></i>
+                                        داخل التطبيق
+                                    </h6>
+                                    <small class="text-muted">إشعارات داخل النظام</small>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.in_app_enabled(class="form-check-input", id="in_app_enabled") }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Settings -->
+            <div class="col-md-6">
+                <div class="card settings-card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-sliders-h me-2"></i>
+                            الإعدادات المتقدمة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Quiet Hours -->
+                        <div class="settings-section">
+                            <h6 class="text-success mb-3">
+                                <i class="fas fa-moon me-2"></i>
+                                ساعات الهدوء
+                            </h6>
+                            <div class="form-check form-switch mb-3">
+                                {{ form.quiet_hours_enabled(class="form-check-input", id="quiet_hours_enabled") }}
+                                {{ form.quiet_hours_enabled.label(class="form-check-label") }}
+                            </div>
+                            <div id="quiet-hours-settings" style="display: none;">
+                                <div class="row">
+                                    <div class="col-6">
+                                        {{ form.quiet_hours_start.label(class="form-label") }}
+                                        {{ form.quiet_hours_start(class="form-control time-input") }}
+                                    </div>
+                                    <div class="col-6">
+                                        {{ form.quiet_hours_end.label(class="form-label") }}
+                                        {{ form.quiet_hours_end(class="form-control time-input") }}
+                                    </div>
+                                </div>
+                                <small class="text-muted">لن يتم إرسال إشعارات خلال هذه الفترة</small>
+                            </div>
+                        </div>
+
+                        <!-- Event-Specific Settings -->
+                        <div class="settings-section">
+                            <h6 class="text-info mb-3">
+                                <i class="fas fa-list me-2"></i>
+                                إعدادات الأحداث
+                            </h6>
+                            
+                            <!-- Claim Created -->
+                            <div class="mb-3">
+                                <h6 class="text-muted">عند إنشاء مطالبة جديدة:</h6>
+                                <div class="row">
+                                    <div class="col-3">
+                                        <div class="form-check">
+                                            {{ form.claim_created_email(class="form-check-input") }}
+                                            {{ form.claim_created_email.label(class="form-check-label") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="form-check">
+                                            {{ form.claim_created_sms(class="form-check-input") }}
+                                            {{ form.claim_created_sms.label(class="form-check-label") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="form-check">
+                                            {{ form.claim_created_push(class="form-check-input") }}
+                                            {{ form.claim_created_push.label(class="form-check-label") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="form-check">
+                                            {{ form.claim_created_whatsapp(class="form-check-input") }}
+                                            {{ form.claim_created_whatsapp.label(class="form-check-label") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Claim Sent -->
+                            <div class="mb-3">
+                                <h6 class="text-muted">عند إرسال مطالبة:</h6>
+                                <div class="row">
+                                    <div class="col-3">
+                                        <div class="form-check">
+                                            {{ form.claim_sent_email(class="form-check-input") }}
+                                            {{ form.claim_sent_email.label(class="form-check-label") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="form-check">
+                                            {{ form.claim_sent_sms(class="form-check-input") }}
+                                            {{ form.claim_sent_sms.label(class="form-check-label") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="form-check">
+                                            {{ form.claim_sent_push(class="form-check-input") }}
+                                            {{ form.claim_sent_push.label(class="form-check-label") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="form-check">
+                                            {{ form.claim_sent_whatsapp(class="form-check-input") }}
+                                            {{ form.claim_sent_whatsapp.label(class="form-check-label") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Claim Status Changed -->
+                            <div class="mb-3">
+                                <h6 class="text-muted">عند تغيير حالة المطالبة:</h6>
+                                <div class="row">
+                                    <div class="col-3">
+                                        <div class="form-check">
+                                            {{ form.claim_status_changed_email(class="form-check-input") }}
+                                            {{ form.claim_status_changed_email.label(class="form-check-label") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="form-check">
+                                            {{ form.claim_status_changed_sms(class="form-check-input") }}
+                                            {{ form.claim_status_changed_sms.label(class="form-check-label") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="form-check">
+                                            {{ form.claim_status_changed_push(class="form-check-input") }}
+                                            {{ form.claim_status_changed_push.label(class="form-check-label") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="form-check">
+                                            {{ form.claim_status_changed_whatsapp(class="form-check-input") }}
+                                            {{ form.claim_status_changed_whatsapp.label(class="form-check-label") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                {{ form.submit(class="btn btn-primary btn-lg") }}
+                <a href="{{ url_for('advanced_notifications.index') }}" class="btn btn-outline-secondary btn-lg ms-2">
+                    إلغاء
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Update notification type cards based on switch state
+    function updateNotificationCard(switchId, cardId) {
+        const isEnabled = $(`#${switchId}`).is(':checked');
+        const card = $(`#${cardId}`);
+        
+        if (isEnabled) {
+            card.removeClass('disabled').addClass('enabled');
+        } else {
+            card.removeClass('enabled').addClass('disabled');
+        }
+    }
+    
+    // Initialize card states
+    updateNotificationCard('email_enabled', 'email-card');
+    updateNotificationCard('sms_enabled', 'sms-card');
+    updateNotificationCard('push_enabled', 'push-card');
+    updateNotificationCard('whatsapp_enabled', 'whatsapp-card');
+    updateNotificationCard('in_app_enabled', 'inapp-card');
+    
+    // Update cards when switches change
+    $('#email_enabled').change(function() {
+        updateNotificationCard('email_enabled', 'email-card');
+    });
+    
+    $('#sms_enabled').change(function() {
+        updateNotificationCard('sms_enabled', 'sms-card');
+    });
+    
+    $('#push_enabled').change(function() {
+        updateNotificationCard('push_enabled', 'push-card');
+    });
+    
+    $('#whatsapp_enabled').change(function() {
+        updateNotificationCard('whatsapp_enabled', 'whatsapp-card');
+        // Show/hide WhatsApp phone input
+        if ($(this).is(':checked')) {
+            $('#whatsapp-phone-group').slideDown();
+        } else {
+            $('#whatsapp-phone-group').slideUp();
+        }
+    });
+    
+    $('#in_app_enabled').change(function() {
+        updateNotificationCard('in_app_enabled', 'inapp-card');
+    });
+    
+    // Show/hide quiet hours settings
+    $('#quiet_hours_enabled').change(function() {
+        if ($(this).is(':checked')) {
+            $('#quiet-hours-settings').slideDown();
+        } else {
+            $('#quiet-hours-settings').slideUp();
+        }
+    });
+    
+    // Initialize quiet hours visibility
+    if ($('#quiet_hours_enabled').is(':checked')) {
+        $('#quiet-hours-settings').show();
+    }
+    
+    // Initialize WhatsApp phone visibility
+    if ($('#whatsapp_enabled').is(':checked')) {
+        $('#whatsapp-phone-group').show();
+    }
+    
+    // Form submission with loading state
+    $('form').submit(function() {
+        const submitBtn = $(this).find('input[type="submit"]');
+        const originalText = submitBtn.val();
+        
+        submitBtn.val('جاري الحفظ...').prop('disabled', true);
+        
+        // Re-enable button after 3 seconds in case of error
+        setTimeout(function() {
+            submitBtn.val(originalText).prop('disabled', false);
+        }, 3000);
+    });
+});
+</script>
+{% endblock %}

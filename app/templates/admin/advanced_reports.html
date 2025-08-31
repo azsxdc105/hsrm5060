@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}التحليلات المتقدمة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="fas fa-analytics me-2"></i>
+                    التحليلات المتقدمة
+                </h2>
+                <div>
+                    <a href="{{ url_for('admin.reports') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        العودة للتقارير
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        الشهر الحالي
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4 class="text-primary">{{ current_month.get('total_claims_value', 0) | int }}</h4>
+                                <p class="text-muted mb-0">إجمالي المطالبات</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4 class="text-success">{{ "{:.1f}%".format(current_month.get('payment_rate', 0)) }}</h4>
+                                <p class="text-muted mb-0">معدل الدفع</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-minus me-2"></i>
+                        الشهر السابق
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4 class="text-primary">{{ last_month.get('total_claims_value', 0) | int }}</h4>
+                                <p class="text-muted mb-0">إجمالي المطالبات</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4 class="text-success">{{ "{:.1f}%".format(last_month.get('payment_rate', 0)) }}</h4>
+                                <p class="text-muted mb-0">معدل الدفع</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">اتجاه المطالبات - 30 يوم</h5>
+                </div>
+                <div class="card-body">
+                    <div id="claims-trend-30-chart" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">اتجاه المطالبات - 90 يوم</h5>
+                </div>
+                <div class="card-body">
+                    <div id="claims-trend-90-chart" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">توزيع المطالبات حسب الحالة</h5>
+                </div>
+                <div class="card-body">
+                    <div id="status-distribution-chart" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">أداء شركات التأمين</h5>
+                </div>
+                <div class="card-body">
+                    <div id="company-performance-chart" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Comparison -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">الملخص الشهري - السنة الحالية</h5>
+                </div>
+                <div class="card-body">
+                    <div id="monthly-summary-current-chart" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">الملخص الشهري - السنة السابقة</h5>
+                </div>
+                <div class="card-body">
+                    <div id="monthly-summary-previous-chart" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coverage Type Analysis -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        تحليل أنواع التغطية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for coverage, data in current_month.get('coverage_breakdown', {}).items() %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-left-primary">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                {% if coverage == 'third_party' %}ضد الغير
+                                                {% elif coverage == 'comprehensive' %}شامل
+                                                {% else %}أخرى
+                                                {% endif %}
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                {{ data.count }} مطالبة
+                                            </div>
+                                            <div class="text-muted">
+                                                {{ "{:,.0f}".format(data.amount) }} ريال
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-shield-alt fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Plotly.js -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get charts data
+    const charts = {{ charts|safe }};
+    
+    // Configure Plotly with Arabic support
+    const config = {
+        responsive: true,
+        displayModeBar: true,
+        locale: 'ar'
+    };
+    
+    // Render all charts
+    if (charts.claims_trend_30) {
+        const chartData = JSON.parse(charts.claims_trend_30);
+        Plotly.newPlot('claims-trend-30-chart', chartData.data, chartData.layout, config);
+    }
+    
+    if (charts.claims_trend_90) {
+        const chartData = JSON.parse(charts.claims_trend_90);
+        Plotly.newPlot('claims-trend-90-chart', chartData.data, chartData.layout, config);
+    }
+    
+    if (charts.status_distribution) {
+        const chartData = JSON.parse(charts.status_distribution);
+        Plotly.newPlot('status-distribution-chart', chartData.data, chartData.layout, config);
+    }
+    
+    if (charts.company_performance) {
+        const chartData = JSON.parse(charts.company_performance);
+        Plotly.newPlot('company-performance-chart', chartData.data, chartData.layout, config);
+    }
+    
+    if (charts.monthly_summary_current) {
+        const chartData = JSON.parse(charts.monthly_summary_current);
+        Plotly.newPlot('monthly-summary-current-chart', chartData.data, chartData.layout, config);
+    }
+    
+    if (charts.monthly_summary_previous) {
+        const chartData = JSON.parse(charts.monthly_summary_previous);
+        Plotly.newPlot('monthly-summary-previous-chart', chartData.data, chartData.layout, config);
+    }
+    
+    // Add chart interaction handlers
+    document.querySelectorAll('[id$="-chart"]').forEach(function(chartDiv) {
+        chartDiv.on('plotly_click', function(data) {
+            console.log('Chart clicked:', data);
+            // Add custom click handlers here
+        });
+    });
+});
+
+// Function to refresh charts
+function refreshCharts() {
+    location.reload();
+}
+
+// Auto-refresh every 5 minutes
+setInterval(refreshCharts, 300000);
+</script>
+
+<style>
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+.text-xs {
+    font-size: 0.75rem;
+}
+
+.font-weight-bold {
+    font-weight: 700;
+}
+
+.text-uppercase {
+    text-transform: uppercase;
+}
+
+.text-primary {
+    color: #4e73df !important;
+}
+
+.text-gray-800 {
+    color: #5a5c69 !important;
+}
+
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+
+.no-gutters {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.no-gutters > .col,
+.no-gutters > [class*="col-"] {
+    padding-right: 0;
+    padding-left: 0;
+}
+</style>
+{% endblock %}

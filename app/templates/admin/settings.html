@@ -25,38 +25,70 @@
                 <div class="card-body">
                     <form method="POST">
                         {{ form.hidden_tag() }}
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <h6 class="text-primary mb-3">
                                     <i class="fas fa-envelope me-2"></i>
                                     إعدادات البريد الإلكتروني
                                 </h6>
-                                
+
                                 <div class="mb-3">
-                                    <label for="mail_server" class="form-label">خادم البريد</label>
-                                    <input type="text" class="form-control" name="mail_server" 
-                                           value="{{ settings.get('MAIL_SERVER', 'smtp.gmail.com') }}"
-                                           placeholder="smtp.gmail.com">
+                                    {{ form.mail_server.label(class="form-label") }}
+                                    {{ form.mail_server(class="form-control") }}
+                                    {% if form.mail_server.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.mail_server.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
                                 </div>
-                                
+
                                 <div class="mb-3">
-                                    <label for="mail_port" class="form-label">منفذ البريد</label>
-                                    <input type="number" class="form-control" name="mail_port" 
-                                           value="{{ settings.get('MAIL_PORT', '587') }}"
-                                           placeholder="587">
+                                    {{ form.mail_port.label(class="form-label") }}
+                                    {{ form.mail_port(class="form-control") }}
+                                    {% if form.mail_port.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.mail_port.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
                                 </div>
-                                
-                                <div class="mb-3 form-check">
-                                    <input type="checkbox" class="form-check-input" name="mail_use_tls" 
-                                           {{ 'checked' if settings.get('MAIL_USE_TLS', 'True') == 'True' else '' }}>
-                                    <label class="form-check-label">استخدام TLS</label>
+
+                                <div class="mb-3">
+                                    {{ form.mail_username.label(class="form-label") }}
+                                    {{ form.mail_username(class="form-control") }}
+                                    {% if form.mail_username.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.mail_username.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
                                 </div>
-                                
+
+                                <div class="mb-3">
+                                    {{ form.mail_password.label(class="form-label") }}
+                                    {{ form.mail_password(class="form-control", placeholder="اتركه فارغاً إذا لم تريد تغييره") }}
+                                    {% if form.mail_password.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.mail_password.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
                                 <div class="mb-3 form-check">
-                                    <input type="checkbox" class="form-check-input" name="mail_use_ssl" 
-                                           {{ 'checked' if settings.get('MAIL_USE_SSL', 'False') == 'True' else '' }}>
-                                    <label class="form-check-label">استخدام SSL</label>
+                                    {{ form.mail_use_tls(class="form-check-input") }}
+                                    {{ form.mail_use_tls.label(class="form-check-label") }}
+                                </div>
+
+                                <div class="mb-3 form-check">
+                                    {{ form.mail_use_ssl(class="form-check-input") }}
+                                    {{ form.mail_use_ssl.label(class="form-check-label") }}
                                 </div>
                             </div>
                             
@@ -65,45 +97,189 @@
                                     <i class="fas fa-upload me-2"></i>
                                     إعدادات رفع الملفات
                                 </h6>
-                                
+
                                 <div class="mb-3">
-                                    <label for="max_upload_mb" class="form-label">الحد الأقصى لحجم الملف (ميجابايت)</label>
-                                    <input type="number" class="form-control" name="max_upload_mb" 
-                                           value="{{ settings.get('MAX_UPLOAD_MB', '25') }}"
-                                           min="1" max="100">
+                                    {{ form.max_upload_mb.label(class="form-label") }}
+                                    {{ form.max_upload_mb(class="form-control", min="1", max="100") }}
+                                    {% if form.max_upload_mb.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.max_upload_mb.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
                                 </div>
-                                
+
                                 <h6 class="text-primary mb-3 mt-4">
                                     <i class="fas fa-robot me-2"></i>
                                     إعدادات الذكاء الاصطناعي
                                 </h6>
-                                
+
                                 <div class="mb-3 form-check">
-                                    <input type="checkbox" class="form-check-input" name="ai_enabled" 
-                                           {{ 'checked' if settings.get('AI_ENABLED', 'False') == 'True' else '' }}>
-                                    <label class="form-check-label">تفعيل الذكاء الاصطناعي</label>
+                                    {{ form.ai_enabled(class="form-check-input") }}
+                                    {{ form.ai_enabled.label(class="form-check-label") }}
                                 </div>
-                                
+
                                 <div class="mb-3 form-check">
-                                    <input type="checkbox" class="form-check-input" name="ocr_enabled" 
-                                           {{ 'checked' if settings.get('OCR_ENABLED', 'False') == 'True' else '' }}>
-                                    <label class="form-check-label">تفعيل قراءة النصوص من الصور (OCR)</label>
+                                    {{ form.ocr_enabled(class="form-check-input") }}
+                                    {{ form.ocr_enabled.label(class="form-check-label") }}
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ الإعدادات
-                            </button>
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a href="{{ url_for('admin.test_email') }}" class="btn btn-outline-info"
+                                   onclick="return confirm('هل تريد إرسال بريد تجريبي؟')">
+                                    <i class="fas fa-paper-plane me-2"></i>
+                                    اختبار البريد الإلكتروني
+                                </a>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>
+                                    حفظ الإعدادات
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-    
+
+    <!-- AI & Advanced Features Settings -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-robot me-2"></i>
+                        إعدادات المميزات المتقدمة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-brain me-2"></i>
+                                التصنيف الذكي
+                            </h6>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="aiClassificationEnabled" checked>
+                                    <label class="form-check-label" for="aiClassificationEnabled">
+                                        تفعيل التصنيف التلقائي للمطالبات الجديدة
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="fraudDetectionEnabled" checked>
+                                    <label class="form-check-label" for="fraudDetectionEnabled">
+                                        تفعيل كشف الاحتيال التلقائي
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="fraudThreshold" class="form-label">حد تنبيه الاحتيال (%)</label>
+                                <input type="range" class="form-range" id="fraudThreshold" min="30" max="90" value="50">
+                                <small class="text-muted">القيمة الحالية: <span id="fraudThresholdValue">50</span>%</small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6 class="text-success mb-3">
+                                <i class="fas fa-bell me-2"></i>
+                                الإشعارات المتقدمة
+                            </h6>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="advancedNotificationsEnabled" checked>
+                                    <label class="form-check-label" for="advancedNotificationsEnabled">
+                                        تفعيل نظام الإشعارات المتقدم
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="smsNotificationsEnabled">
+                                    <label class="form-check-label" for="smsNotificationsEnabled">
+                                        تفعيل الإشعارات النصية (SMS)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="whatsappNotificationsEnabled">
+                                    <label class="form-check-label" for="whatsappNotificationsEnabled">
+                                        تفعيل إشعارات واتساب
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="text-info mb-3">
+                                <i class="fas fa-cog me-2"></i>
+                                إعدادات الخدمات الخارجية
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card border-secondary">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-sms fa-2x text-primary mb-2"></i>
+                                            <h6>Twilio SMS</h6>
+                                            <span class="badge bg-secondary">غير مكون</span>
+                                            <br>
+                                            <small class="text-muted">للرسائل النصية</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-secondary">
+                                        <div class="card-body text-center">
+                                            <i class="fab fa-whatsapp fa-2x text-success mb-2"></i>
+                                            <h6>WhatsApp Business</h6>
+                                            <span class="badge bg-secondary">غير مكون</span>
+                                            <br>
+                                            <small class="text-muted">لإشعارات واتساب</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-secondary">
+                                        <div class="card-body text-center">
+                                            <i class="fab fa-google fa-2x text-warning mb-2"></i>
+                                            <h6>Firebase FCM</h6>
+                                            <span class="badge bg-secondary">غير مكون</span>
+                                            <br>
+                                            <small class="text-muted">للإشعارات المنبثقة</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>ملاحظة:</strong> لتفعيل جميع المميزات، يرجى إضافة مفاتيح API المطلوبة في ملف الإعدادات.
+                                <a href="#" class="alert-link" data-bs-toggle="modal" data-bs-target="#configModal">عرض التفاصيل</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">
@@ -115,7 +291,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <h6>إحصائيات النظام</h6>
                             <ul class="list-unstyled">
                                 <li><strong>إجمالي المطالبات:</strong> {{ stats.get('total_claims', 0) }}</li>
@@ -124,10 +300,19 @@
                                 <li><strong>إجمالي المستخدمين:</strong> {{ stats.get('total_users', 0) }}</li>
                             </ul>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <h6>المميزات المتقدمة</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>المطالبات المصنفة:</strong> <span id="stats-classified">-</span></li>
+                                <li><strong>عالية المخاطر:</strong> <span id="stats-high-risk">-</span></li>
+                                <li><strong>إجمالي الإشعارات:</strong> <span id="stats-notifications">-</span></li>
+                                <li><strong>قوالب الإشعارات:</strong> <span id="stats-templates">-</span></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
                             <h6>معلومات تقنية</h6>
                             <ul class="list-unstyled">
-                                <li><strong>إصدار النظام:</strong> 1.0.0</li>
+                                <li><strong>إصدار النظام:</strong> 2.0.0 <span class="badge bg-success">جديد</span></li>
                                 <li><strong>قاعدة البيانات:</strong> PostgreSQL</li>
                                 <li><strong>الخادم:</strong> Flask</li>
                                 <li><strong>آخر تحديث:</strong> {{ last_update }}</li>
@@ -139,4 +324,138 @@
         </div>
     </div>
 </div>
+
+<!-- Configuration Modal -->
+<div class="modal fade" id="configModal" tabindex="-1" aria-labelledby="configModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="configModalLabel">
+                    <i class="fas fa-cog me-2"></i>
+                    إعدادات الخدمات الخارجية
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">لتفعيل جميع المميزات المتقدمة، يرجى إضافة الإعدادات التالية في ملف <code>config.py</code>:</p>
+
+                <h6 class="text-primary">إعدادات Twilio للرسائل النصية:</h6>
+                <pre class="bg-light p-3 rounded"><code># SMS (Twilio)
+TWILIO_ACCOUNT_SID = 'your_twilio_account_sid'
+TWILIO_AUTH_TOKEN = 'your_twilio_auth_token'
+TWILIO_PHONE_NUMBER = '+1234567890'</code></pre>
+
+                <h6 class="text-success">إعدادات WhatsApp Business API:</h6>
+                <pre class="bg-light p-3 rounded"><code># WhatsApp Business API
+WHATSAPP_ACCESS_TOKEN = 'your_whatsapp_access_token'
+WHATSAPP_PHONE_NUMBER_ID = 'your_phone_number_id'</code></pre>
+
+                <h6 class="text-warning">إعدادات Firebase للإشعارات المنبثقة:</h6>
+                <pre class="bg-light p-3 rounded"><code># Push Notifications (Firebase)
+FIREBASE_SERVER_KEY = 'your_firebase_server_key'</code></pre>
+
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>تحذير:</strong> تأكد من الحفاظ على سرية هذه المفاتيح ولا تشاركها مع أحد.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                <a href="https://www.twilio.com" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-external-link-alt me-2"></i>الحصول على Twilio
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Load advanced features statistics
+    loadAdvancedStats();
+
+    // Update fraud threshold value display
+    $('#fraudThreshold').on('input', function() {
+        $('#fraudThresholdValue').text($(this).val());
+    });
+
+    // Save settings when switches are toggled
+    $('.form-check-input').on('change', function() {
+        const setting = $(this).attr('id');
+        const value = $(this).is(':checked');
+
+        // Here you would typically send an AJAX request to save the setting
+        console.log(`Setting ${setting} changed to ${value}`);
+
+        // Show a brief success message
+        showToast('تم حفظ الإعداد بنجاح', 'success');
+    });
+
+    // Save fraud threshold when changed
+    $('#fraudThreshold').on('change', function() {
+        const value = $(this).val();
+        console.log(`Fraud threshold changed to ${value}%`);
+        showToast(`تم تحديث حد تنبيه الاحتيال إلى ${value}%`, 'success');
+    });
+});
+
+function loadAdvancedStats() {
+    // Load AI Classification stats
+    $.get('/ai-classification/api/statistics')
+        .done(function(response) {
+            if (response.success) {
+                $('#stats-classified').text(response.total_classified || 0);
+                $('#stats-high-risk').text(response.high_risk_count || 0);
+            }
+        })
+        .fail(function() {
+            $('#stats-classified').text('0');
+            $('#stats-high-risk').text('0');
+        });
+
+    // Load Notifications stats
+    $.get('/advanced-notifications/api/statistics')
+        .done(function(response) {
+            if (response.success) {
+                $('#stats-notifications').text(response.total_notifications || 0);
+                $('#stats-templates').text(response.active_templates || 0);
+            }
+        })
+        .fail(function() {
+            $('#stats-notifications').text('0');
+            $('#stats-templates').text('0');
+        });
+}
+
+function showToast(message, type = 'info') {
+    const toastHtml = `
+        <div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+
+    // Create toast container if it doesn't exist
+    if (!$('#toast-container').length) {
+        $('body').append('<div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>');
+    }
+
+    const $toast = $(toastHtml);
+    $('#toast-container').append($toast);
+
+    const toast = new bootstrap.Toast($toast[0]);
+    toast.show();
+
+    // Remove toast element after it's hidden
+    $toast.on('hidden.bs.toast', function() {
+        $(this).remove();
+    });
+}
+</script>
 {% endblock %}

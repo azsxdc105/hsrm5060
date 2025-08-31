@@ -16,7 +16,7 @@
                         {{ claim.get_status_text_ar() }}
                     </span>
                     <div class="btn-group">
-                        <a href="{{ url_for('claims.edit_claim', claim_id=claim.id) }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ url_for('claims.edit', id=claim.id) }}" class="btn btn-sm btn-outline-primary">
                             <i class="fas fa-edit me-1"></i>تعديل
                         </a>
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -25,7 +25,7 @@
                         <ul class="dropdown-menu">
                             {% if claim.status in ['draft', 'ready', 'failed'] %}
                                 <li>
-                                    <form method="POST" action="{{ url_for('claims.send_claim', claim_id=claim.id) }}" class="d-inline">
+                                    <form method="POST" action="{{ url_for('claims.send', id=claim.id) }}" class="d-inline">
                                         <button type="submit" class="dropdown-item" onclick="return confirm('هل أنت متأكد من إرسال المطالبة؟')">
                                             <i class="fas fa-paper-plane me-2"></i>إرسال
                                         </button>
@@ -34,16 +34,23 @@
                             {% endif %}
                             {% if claim.status in ['sent', 'failed'] %}
                                 <li>
-                                    <form method="POST" action="{{ url_for('claims.resend_claim', claim_id=claim.id) }}" class="d-inline">
+                                    <form method="POST" action="{{ url_for('claims.send', id=claim.id) }}" class="d-inline">
                                         <button type="submit" class="dropdown-item" onclick="return confirm('هل أنت متأكد من إعادة إرسال المطالبة؟')">
                                             <i class="fas fa-redo me-2"></i>إعادة إرسال
                                         </button>
                                     </form>
                                 </li>
                             {% endif %}
+                            {% if current_user.role == 'admin' and claim.status in ['acknowledged', 'paid'] %}
+                                <li>
+                                    <a href="{{ url_for('payments.new_payment', claim_id=claim.id) }}" class="dropdown-item">
+                                        <i class="fas fa-money-bill-wave me-2"></i>إضافة مدفوعة
+                                    </a>
+                                </li>
+                            {% endif %}
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <form method="POST" action="{{ url_for('claims.delete_claim', claim_id=claim.id) }}" class="d-inline">
+                                <form method="POST" action="{{ url_for('claims.delete', id=claim.id) }}" class="d-inline">
                                     <button type="submit" class="dropdown-item text-danger" onclick="return confirm('هل أنت متأكد من حذف المطالبة؟ هذا الإجراء لا يمكن التراجع عنه.')">
                                         <i class="fas fa-trash me-2"></i>حذف
                                     </button>

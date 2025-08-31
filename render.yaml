@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: file-email-sender
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements_production.txt
+    startCommand: gunicorn run:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: ADMIN_EMAIL
+        value: admin@claims.com
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: AI_ENABLED
+        value: false
+      - key: OCR_ENABLED
+        value: false
+      - key: SMS_ENABLED
+        value: false
+      - key: WHATSAPP_ENABLED
+        value: false
+      - key: NOTIFICATIONS_ENABLED
+        value: true
+      - key: CACHE_TYPE
+        value: SimpleCache
+
+databases:
+  - name: claims-db
+    plan: free
+    databaseName: claims
+    user: claims_user

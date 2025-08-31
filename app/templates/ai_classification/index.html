@@ -1,0 +1,422 @@
+{% extends "base.html" %}
+
+{% block title %}التصنيف الذكي للمطالبات{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ai-card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .ai-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    }
+    .ai-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 24px;
+        color: white;
+    }
+    .classification-item {
+        border-left: 4px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+    .classification-item:hover {
+        background-color: #f8f9fa;
+        transform: translateX(-2px);
+    }
+    .classification-item.high-risk {
+        border-left-color: #dc3545;
+    }
+    .classification-item.medium-risk {
+        border-left-color: #ffc107;
+    }
+    .classification-item.low-risk {
+        border-left-color: #28a745;
+    }
+    .confidence-bar {
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        background-color: #e9ecef;
+    }
+    .confidence-fill {
+        height: 100%;
+        transition: width 0.3s ease;
+    }
+    .fraud-indicator {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+    .category-badge {
+        font-size: 0.8rem;
+        padding: 4px 12px;
+        border-radius: 15px;
+    }
+    .ai-brain {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .ai-shield {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .ai-chart {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    .ai-review {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-brain text-primary"></i>
+                        التصنيف الذكي للمطالبات
+                    </h2>
+                    <p class="text-muted mb-0">نظام ذكي لتصنيف المطالبات وكشف الاحتيال</p>
+                </div>
+                <div>
+                    <button id="batchClassifyBtn" class="btn btn-primary">
+                        <i class="fas fa-magic"></i> تصنيف تلقائي للمطالبات
+                    </button>
+                    <a href="{{ url_for('ai_classification.statistics') }}" class="btn btn-outline-info">
+                        <i class="fas fa-chart-bar"></i> الإحصائيات
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card ai-card text-center">
+                <div class="card-body">
+                    <div class="ai-icon ai-brain">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h4 class="mb-0">{{ stats.total_classified }}</h4>
+                    <small class="text-muted">إجمالي المطالبات المصنفة</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card ai-card text-center">
+                <div class="card-body">
+                    <div class="ai-icon ai-shield">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h4 class="mb-0">{{ stats.high_risk_count }}</h4>
+                    <small class="text-muted">مطالبات عالية المخاطر</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card ai-card text-center">
+                <div class="card-body">
+                    <div class="ai-icon ai-chart">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h4 class="mb-0">{{ stats.fraud_suspects }}</h4>
+                    <small class="text-muted">مشتبه بالاحتيال</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card ai-card text-center">
+                <div class="card-body">
+                    <div class="ai-icon ai-review">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <h4 class="mb-0">{{ stats.pending_review }}</h4>
+                    <small class="text-muted">في انتظار المراجعة</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Distribution -->
+    {% if stats.category_stats %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card ai-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie"></i> توزيع الفئات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for stat in stats.category_stats %}
+                        <div class="col-md-2 text-center mb-3">
+                            <div class="category-badge badge badge-primary">
+                                {% if stat.category == 'vehicle_accident' %}حادث مركبة
+                                {% elif stat.category == 'medical' %}طبي
+                                {% elif stat.category == 'property_damage' %}أضرار الممتلكات
+                                {% elif stat.category == 'theft' %}سرقة
+                                {% elif stat.category == 'natural_disaster' %}كارثة طبيعية
+                                {% else %}{{ stat.category }}
+                                {% endif %}
+                            </div>
+                            <h4 class="mt-2">{{ stat.count }}</h4>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card ai-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt"></i> إجراءات سريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="{{ url_for('ai_classification.pending_review') }}" class="btn btn-outline-warning btn-block">
+                                <i class="fas fa-clock"></i> المطالبات المعلقة
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-danger btn-block" onclick="showHighRiskClaims()">
+                                <i class="fas fa-exclamation-triangle"></i> عالية المخاطر
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-info btn-block" onclick="showFraudSuspects()">
+                                <i class="fas fa-search"></i> مشتبه بالاحتيال
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('ai_classification.statistics') }}" class="btn btn-outline-success btn-block">
+                                <i class="fas fa-chart-line"></i> تقارير مفصلة
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Classifications -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card ai-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history"></i> التصنيفات الأخيرة
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_classifications %}
+                    <div class="list-group list-group-flush">
+                        {% for classification in recent_classifications %}
+                        <div class="list-group-item classification-item {{ classification.risk_level }}-risk">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <h6 class="mb-0 me-2">
+                                            <a href="{{ url_for('claims.view', id=classification.claim_id) }}" class="text-decoration-none">
+                                                مطالبة {{ classification.claim_id }}
+                                            </a>
+                                        </h6>
+                                        <span class="category-badge badge badge-secondary">
+                                            {{ classification.get_category_display_name() }}
+                                        </span>
+                                        <span class="badge badge-{{ classification.get_risk_level_color() }} ms-2">
+                                            {{ classification.get_risk_level_display_name() }}
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Confidence Bar -->
+                                    <div class="mb-2">
+                                        <small class="text-muted">الثقة: {{ (classification.confidence * 100)|round(1) }}%</small>
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill bg-primary" style="width: {{ (classification.confidence * 100)|round(1) }}%"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Fraud Indicator -->
+                                    {% if classification.fraud_probability > 0 %}
+                                    <div class="mb-2">
+                                        <span class="fraud-indicator badge badge-{{ classification.get_fraud_risk_color() }}">
+                                            احتمالية الاحتيال: {{ (classification.fraud_probability * 100)|round(1) }}%
+                                        </span>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Suggested Amount -->
+                                    {% if classification.suggested_amount %}
+                                    <div class="mb-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calculator"></i>
+                                            المبلغ المقترح: {{ "{:,.2f}".format(classification.suggested_amount) }} ريال
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex align-items-center text-muted small">
+                                        <i class="fas fa-clock me-1"></i>
+                                        <span>{{ classification.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                        
+                                        {% if classification.reviewed_by_user_id %}
+                                        <i class="fas fa-user-check ms-3 me-1 text-success"></i>
+                                        <span class="text-success">تمت المراجعة</span>
+                                        {% else %}
+                                        <i class="fas fa-clock ms-3 me-1 text-warning"></i>
+                                        <span class="text-warning">في انتظار المراجعة</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="text-end">
+                                    <a href="{{ url_for('ai_classification.view_classification', claim_id=classification.claim_id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> عرض
+                                    </a>
+                                    {% if not classification.reviewed_by_user_id %}
+                                    <a href="{{ url_for('ai_classification.review_classification', claim_id=classification.claim_id) }}" 
+                                       class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-edit"></i> مراجعة
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-brain fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا توجد تصنيفات حتى الآن</h5>
+                        <p class="text-muted">ابدأ بتصنيف المطالبات باستخدام الذكاء الاصطناعي</p>
+                        <button id="startClassificationBtn" class="btn btn-primary">
+                            <i class="fas fa-play"></i> بدء التصنيف
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="sr-only">جاري التحميل...</span>
+                </div>
+                <h5>جاري تصنيف المطالبات...</h5>
+                <p class="text-muted">يرجى الانتظار، هذا قد يستغرق بضع دقائق</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Batch classification
+    $('#batchClassifyBtn, #startClassificationBtn').click(function() {
+        const button = $(this);
+        button.prop('disabled', true);
+        
+        // Show loading modal
+        $('#loadingModal').modal('show');
+        
+        $.post('/ai-classification/batch_classify')
+            .done(function(response) {
+                if (response.success) {
+                    showAlert('success', response.message);
+                    if (response.high_risk_count > 0) {
+                        showAlert('warning', `تم اكتشاف ${response.high_risk_count} مطالبة عالية المخاطر`);
+                    }
+                    // Reload page after 2 seconds
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showAlert('danger', 'حدث خطأ: ' + response.error);
+                }
+            })
+            .fail(function() {
+                showAlert('danger', 'حدث خطأ في الاتصال');
+            })
+            .always(function() {
+                $('#loadingModal').modal('hide');
+                button.prop('disabled', false);
+            });
+    });
+    
+    // Show alert message
+    function showAlert(type, message) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        $('.container-fluid').prepend(alertHtml);
+        
+        // Auto dismiss after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut();
+        }, 5000);
+    }
+});
+
+// Quick filter functions
+function showHighRiskClaims() {
+    // This would filter the list to show only high risk claims
+    $('.classification-item').hide();
+    $('.classification-item.high-risk').show();
+    showAlert('info', 'عرض المطالبات عالية المخاطر فقط');
+}
+
+function showFraudSuspects() {
+    // This would filter the list to show only fraud suspects
+    $('.classification-item').each(function() {
+        const fraudIndicator = $(this).find('.fraud-indicator');
+        if (fraudIndicator.length > 0) {
+            const fraudText = fraudIndicator.text();
+            const fraudPercent = parseFloat(fraudText.match(/\d+\.?\d*/));
+            if (fraudPercent > 50) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        } else {
+            $(this).hide();
+        }
+    });
+    showAlert('info', 'عرض المطالبات المشتبه بالاحتيال فقط');
+}
+</script>
+{% endblock %}

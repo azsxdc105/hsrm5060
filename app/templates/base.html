@@ -9,6 +9,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Animate.css -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <!-- AOS (Animate On Scroll) -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <!-- Custom CSS -->
     <style>
         body {
@@ -106,6 +110,15 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <!-- Development Mode Banner -->
+    {% if config.DEBUG %}
+    <div class="alert alert-warning alert-dismissible fade show m-0 rounded-0 text-center" role="alert">
+        <strong><i class="fas fa-code me-2"></i>وضع التطوير</strong> -
+        الموقع يعمل في وضع التطوير مع تفعيل التصحيح والتحديث التلقائي
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
     <!-- Language Switcher -->
     <div class="language-switcher">
         <div class="btn-group" role="group">
@@ -124,13 +137,29 @@
             
             <div class="navbar-nav ms-auto">
                 {% if current_user.is_authenticated %}
+                    <!-- Quick Access to New Features -->
+                    <a class="nav-link position-relative" href="{{ url_for('advanced_notifications.index') }}" title="الإشعارات">
+                        <i class="fas fa-bell"></i>
+                        <span id="navbar-notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                            0
+                        </span>
+                    </a>
+
+                    {% if current_user.is_admin() %}
+                    <a class="nav-link" href="{{ url_for('ai_classification.index') }}" title="التصنيف الذكي">
+                        <i class="fas fa-brain text-primary"></i>
+                        <span class="badge bg-success ms-1" style="font-size: 0.6rem;">جديد</span>
+                    </a>
+                    {% endif %}
+
                     <div class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-user me-2"></i>
                             {{ current_user.full_name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ url_for('main.profile') }}">الملف الشخصي</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('profile') }}">الملف الشخصي</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('advanced_notifications.settings') }}">إعدادات الإشعارات</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">تسجيل الخروج</a></li>
                         </ul>
@@ -150,18 +179,67 @@
                     لوحة التحكم
                 </a>
             </li>
+            {% if current_user.role in ['claims_agent', 'employee'] %}
             <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'claims.new_claim' }}" href="{{ url_for('claims.new_claim') }}">
+                <a class="nav-link {{ 'active' if request.endpoint == 'main.employee_dashboard' }}" href="{{ url_for('main.employee_dashboard') }}">
+                    <i class="fas fa-user-tie me-2"></i>
+                    لوحة الموظف
+                </a>
+            </li>
+            {% endif %}
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle {{ 'active' if request.endpoint in ['claims.new', 'dynamic_forms.new_dynamic_claim'] }}" href="#" id="newClaimDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-plus me-2"></i>
                     مطالبة جديدة
                 </a>
+                <ul class="dropdown-menu" aria-labelledby="newClaimDropdown">
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('dynamic_forms.new_dynamic_claim') }}">
+                            <i class="fas fa-magic me-2"></i>
+                            نموذج ديناميكي (جديد)
+                            <span class="badge bg-success ms-2">NEW</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('claims.new') }}">
+                            <i class="fas fa-file-alt me-2"></i>
+                            النموذج التقليدي
+                        </a>
+                    </li>
+                </ul>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'main.claims_list' }}" href="{{ url_for('main.claims_list') }}">
+                <a class="nav-link {{ 'active' if request.endpoint == 'claims.index' }}" href="{{ url_for('claims.index') }}">
                     <i class="fas fa-list me-2"></i>
                     جميع المطالبات
                 </a>
             </li>
+
+            <!-- User Features -->
+            <li class="nav-item">
+                <hr class="text-light">
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint.startswith('advanced_notifications.') }}" href="{{ url_for('advanced_notifications.index') }}">
+                    <i class="fas fa-bell me-2"></i>
+                    الإشعارات
+                    <span id="notification-badge" class="badge bg-danger ms-2" style="display: none;">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint.startswith('advanced_notifications.settings') }}" href="{{ url_for('advanced_notifications.settings') }}">
+                    <i class="fas fa-cog me-2"></i>
+                    إعدادات الإشعارات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('reports.') }}" href="/reports/">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    التقارير والإحصائيات
+                    <span class="badge bg-success ms-2">محسن</span>
+                </a>
+            </li>
+
             {% if current_user.is_admin() %}
                 <li class="nav-item">
                     <hr class="text-light">
@@ -190,6 +268,85 @@
                         الإعدادات
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint.startswith('dynamic_forms.manage') }}" href="{{ url_for('dynamic_forms.manage_claim_types') }}">
+                        <i class="fas fa-magic me-2"></i>
+                        أنواع المطالبات
+                        <span class="badge bg-success ms-2">جديد</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.advanced_features' }}" href="{{ url_for('admin.advanced_features') }}">
+                        <i class="fas fa-rocket me-2"></i>
+                        المميزات المتقدمة
+                        <span class="badge bg-success ms-2">جديد</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.audit_logs' }}" href="{{ url_for('admin.audit_logs') }}">
+                        <i class="fas fa-history me-2"></i>
+                        سجل التدقيق
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('payments.index') }}">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        المدفوعات
+                        <span class="badge bg-warning ms-2">قيد التطوير</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.performance_dashboard' }}" href="{{ url_for('admin.performance_dashboard') }}">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        مراقبة الأداء
+                    </a>
+                </li>
+
+                <!-- AI & Advanced Features -->
+                <li class="nav-item">
+                    <hr class="text-light">
+                    <small class="text-muted px-3">المميزات المتقدمة</small>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint.startswith('ai_classification.') }}" href="{{ url_for('ai_classification.index') }}">
+                        <i class="fas fa-brain me-2"></i>
+                        التصنيف الذكي
+                        <span class="badge bg-success ms-2">جديد</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint.startswith('advanced_notifications.') }}" href="{{ url_for('advanced_notifications.index') }}">
+                        <i class="fas fa-bell me-2"></i>
+                        الإشعارات المتقدمة
+                        <span class="badge bg-success ms-2">جديد</span>
+                    </a>
+                </li>
+
+                <!-- Development Tools -->
+                {% if config.DEBUG %}
+                <li class="nav-item">
+                    <hr class="text-light">
+                    <small class="text-muted px-3">أدوات التطوير</small>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.ocr_test') }}">
+                        <i class="fas fa-eye me-2"></i>
+                        اختبار OCR
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="showDatabaseInfo()">
+                        <i class="fas fa-database me-2"></i>
+                        معلومات قاعدة البيانات
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="clearCache()">
+                        <i class="fas fa-broom me-2"></i>
+                        مسح الذاكرة المؤقتة
+                    </a>
+                </li>
+                {% endif %}
             {% endif %}
         </ul>
     </nav>
@@ -216,17 +373,128 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- AOS (Animate On Scroll) -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
-        // Auto-hide alerts after 5 seconds
+        // Initialize AOS
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true,
+            mirror: false
+        });
+
+        // Enhanced alert system with SweetAlert2
+        function showAlert(type, title, message, timer = 5000) {
+            Swal.fire({
+                icon: type,
+                title: title,
+                text: message,
+                timer: timer,
+                timerProgressBar: true,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }
+
+        // Auto-hide Bootstrap alerts after 5 seconds with animation
         setTimeout(function() {
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {
                 if (alert.classList.contains('show')) {
-                    alert.classList.remove('show');
+                    alert.style.transition = 'all 0.5s ease-out';
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-20px)';
+                    setTimeout(() => {
+                        alert.classList.remove('show');
+                    }, 500);
                 }
             });
         }, 5000);
+
+        // Add loading states to buttons
+        function addLoadingState(button, originalText = null) {
+            if (!originalText) {
+                originalText = button.innerHTML;
+            }
+            button.setAttribute('data-original-text', originalText);
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري التحميل...';
+            button.disabled = true;
+            return originalText;
+        }
+
+        function removeLoadingState(button) {
+            const originalText = button.getAttribute('data-original-text');
+            if (originalText) {
+                button.innerHTML = originalText;
+                button.disabled = false;
+                button.removeAttribute('data-original-text');
+            }
+        }
+
+        // Enhanced form validation
+        function validateForm(formElement) {
+            const inputs = formElement.querySelectorAll('input[required], select[required], textarea[required]');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                }
+            });
+
+            return isValid;
+        }
+
+        // Add smooth scrolling to all anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add ripple effect to buttons
+        function createRipple(event) {
+            const button = event.currentTarget;
+            const circle = document.createElement('span');
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - button.offsetLeft - radius}px`;
+            circle.style.top = `${event.clientY - button.offsetTop - radius}px`;
+            circle.classList.add('ripple');
+
+            const ripple = button.getElementsByClassName('ripple')[0];
+            if (ripple) {
+                ripple.remove();
+            }
+
+            button.appendChild(circle);
+        }
+
+        // Apply ripple effect to all buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', createRipple);
+            });
+        });
         
         // File upload drag and drop
         document.addEventListener('DOMContentLoaded', function() {
@@ -256,5 +524,54 @@
     </script>
     
     {% block extra_js %}{% endblock %}
+
+    <!-- Real-time Notification Counter -->
+    {% if current_user.is_authenticated %}
+    <script>
+    $(document).ready(function() {
+        // Update notification count on page load
+        updateNotificationCount();
+
+        // Update notification count every 30 seconds
+        setInterval(updateNotificationCount, 30000);
+
+        function updateNotificationCount() {
+            // Try both notification systems
+            $.get('/notifications/api/unread-count')
+                .done(function(response) {
+                    const sidebarBadge = $('#notification-badge');
+                    const navbarBadge = $('#navbar-notification-badge');
+
+                    if (response.count > 0) {
+                        sidebarBadge.text(response.count).show();
+                        navbarBadge.text(response.count).show();
+                    } else {
+                        sidebarBadge.hide();
+                        navbarBadge.hide();
+                    }
+                })
+                .fail(function() {
+                    // Fallback to advanced notifications
+                    $.get('/advanced-notifications/api/unread_count')
+                        .done(function(response) {
+                            const sidebarBadge = $('#notification-badge');
+                            const navbarBadge = $('#navbar-notification-badge');
+
+                            if (response.count > 0) {
+                                sidebarBadge.text(response.count).show();
+                                navbarBadge.text(response.count).show();
+                            } else {
+                                sidebarBadge.hide();
+                                navbarBadge.hide();
+                            }
+                        })
+                        .fail(function() {
+                            // Silently fail - don't show errors for this background request
+                        });
+                });
+        }
+    });
+    </script>
+    {% endif %}
 </body>
 </html>

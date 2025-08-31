@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}التقارير المتقدمة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    التقارير المتقدمة
+                </h1>
+                <div>
+                    <a href="{{ url_for('reports.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        العودة للتقارير
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        مقاييس الأداء
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h3 class="text-primary" id="avgProcessingTime">-</h3>
+                                <p class="text-muted">متوسط وقت المعالجة (أيام)</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h3 class="text-success" id="overallSuccessRate">-</h3>
+                                <p class="text-muted">معدل النجاح الإجمالي</p>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div id="companySuccessRates">
+                        <h6>معدل النجاح حسب الشركة:</h6>
+                        <div id="companyRatesList">
+                            <!-- Company success rates will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        توزيع الأداء
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Time-based Analysis -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        تحليل زمني متقدم
+                    </h5>
+                    <div>
+                        <select class="form-select form-select-sm" id="timeAnalysisRange">
+                            <option value="7">آخر 7 أيام</option>
+                            <option value="30" selected>آخر 30 يوم</option>
+                            <option value="90">آخر 90 يوم</option>
+                            <option value="365">آخر سنة</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="timeAnalysisChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparative Analysis -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-balance-scale me-2"></i>
+                        تحليل مقارن
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="comparativeChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trophy me-2"></i>
+                        أفضل الأداءات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="topPerformers">
+                        <!-- Top performers will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Statistics Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2"></i>
+                        إحصائيات تفصيلية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="detailedStatsTable">
+                            <thead>
+                                <tr>
+                                    <th>الشركة</th>
+                                    <th>إجمالي المطالبات</th>
+                                    <th>المطالبات المرسلة</th>
+                                    <th>معدل النجاح</th>
+                                    <th>متوسط المبلغ</th>
+                                    <th>إجمالي المبلغ</th>
+                                    <th>متوسط وقت المعالجة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+let performanceChart, timeAnalysisChart, comparativeChart;
+
+$(document).ready(function() {
+    initializeCharts();
+    loadPerformanceMetrics();
+    loadTimeAnalysis();
+    loadComparativeData();
+    loadDetailedStats();
+    
+    // Event listeners
+    $('#timeAnalysisRange').change(function() {
+        loadTimeAnalysis();
+    });
+});
+
+function initializeCharts() {
+    // Performance Chart
+    const performanceCtx = document.getElementById('performanceChart');
+    if (performanceCtx) {
+        performanceChart = new Chart(performanceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: [
+                        '#28a745', '#dc3545', '#ffc107', '#17a2b8'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+    
+    // Time Analysis Chart
+    const timeCtx = document.getElementById('timeAnalysisChart');
+    if (timeCtx) {
+        timeAnalysisChart = new Chart(timeCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'عدد المطالبات',
+                    data: [],
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    fill: true
+                }, {
+                    label: 'المطالبات المرسلة',
+                    data: [],
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+    
+    // Comparative Chart
+    const compCtx = document.getElementById('comparativeChart');
+    if (compCtx) {
+        comparativeChart = new Chart(compCtx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'الشهر الحالي',
+                    data: [],
+                    backgroundColor: '#007bff'
+                }, {
+                    label: 'الشهر السابق',
+                    data: [],
+                    backgroundColor: '#6c757d'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+}
+
+function loadPerformanceMetrics() {
+    $.get('/reports/api/performance-metrics')
+        .done(function(data) {
+            // Update processing time
+            $('#avgProcessingTime').text(data.processing_time.avg_days.toFixed(1));
+            
+            // Calculate overall success rate
+            let totalClaims = 0;
+            let totalSuccessful = 0;
+            
+            data.company_success_rates.forEach(rate => {
+                totalClaims += rate.total_claims;
+                totalSuccessful += rate.successful_claims;
+            });
+            
+            const overallRate = totalClaims > 0 ? (totalSuccessful / totalClaims * 100).toFixed(1) : 0;
+            $('#overallSuccessRate').text(overallRate + '%');
+            
+            // Update company success rates
+            const ratesList = $('#companyRatesList');
+            ratesList.empty();
+            
+            data.company_success_rates.forEach(rate => {
+                const progressBar = `
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <small>${rate.company}</small>
+                            <small>${rate.success_rate.toFixed(1)}%</small>
+                        </div>
+                        <div class="progress progress-sm">
+                            <div class="progress-bar" style="width: ${rate.success_rate}%"></div>
+                        </div>
+                    </div>
+                `;
+                ratesList.append(progressBar);
+            });
+            
+            // Update performance chart
+            if (performanceChart) {
+                const labels = data.company_success_rates.map(r => r.company);
+                const values = data.company_success_rates.map(r => r.success_rate);
+                
+                performanceChart.data.labels = labels;
+                performanceChart.data.datasets[0].data = values;
+                performanceChart.update();
+            }
+        })
+        .fail(function() {
+            console.error('Failed to load performance metrics');
+        });
+}
+
+function loadTimeAnalysis() {
+    const days = $('#timeAnalysisRange').val();
+    
+    $.get(`/reports/api/claims-timeline?days=${days}`)
+        .done(function(data) {
+            if (timeAnalysisChart) {
+                timeAnalysisChart.data.labels = data.labels;
+                timeAnalysisChart.data.datasets[0].data = data.claims_count;
+                // You can add more datasets for sent claims, etc.
+                timeAnalysisChart.update();
+            }
+        })
+        .fail(function() {
+            console.error('Failed to load time analysis');
+        });
+}
+
+function loadComparativeData() {
+    // This would load comparative data between current and previous periods
+    // For now, we'll use dummy data
+    if (comparativeChart) {
+        comparativeChart.data.labels = ['المطالبات', 'المرسل', 'المدفوع'];
+        comparativeChart.data.datasets[0].data = [120, 95, 80];
+        comparativeChart.data.datasets[1].data = [100, 85, 70];
+        comparativeChart.update();
+    }
+}
+
+function loadDetailedStats() {
+    $.get('/reports/api/claims-by-company')
+        .done(function(data) {
+            const tbody = $('#detailedStatsTable tbody');
+            tbody.empty();
+            
+            // This is a simplified version - you'd want to get more detailed stats
+            data.labels.forEach((company, index) => {
+                const count = data.claims_count[index];
+                const successRate = Math.random() * 100; // Placeholder
+                const avgAmount = Math.random() * 10000; // Placeholder
+                const totalAmount = count * avgAmount;
+                const avgProcessingTime = Math.random() * 5; // Placeholder
+                
+                const row = `
+                    <tr>
+                        <td>${company}</td>
+                        <td>${count}</td>
+                        <td>${Math.floor(count * successRate / 100)}</td>
+                        <td>${successRate.toFixed(1)}%</td>
+                        <td>${avgAmount.toFixed(0)} ريال</td>
+                        <td>${totalAmount.toFixed(0)} ريال</td>
+                        <td>${avgProcessingTime.toFixed(1)} أيام</td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        })
+        .fail(function() {
+            console.error('Failed to load detailed stats');
+        });
+}
+</script>
+{% endblock %}

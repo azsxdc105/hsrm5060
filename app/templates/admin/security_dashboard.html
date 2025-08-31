@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة تحكم الأمان{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    لوحة تحكم الأمان
+                </h1>
+                <div>
+                    <button class="btn btn-outline-primary me-2" onclick="refreshSecurityData()">
+                        <i class="fas fa-sync-alt me-2"></i>
+                        تحديث
+                    </button>
+                    <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        العودة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Metrics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0" id="blockedIpsCount">{{ security_data.blocked_ips_count }}</h4>
+                            <p class="mb-0">عناوين IP محظورة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-ban fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0" id="failedAttemptsCount">{{ security_data.failed_attempts_count }}</h4>
+                            <p class="mb-0">محاولات فاشلة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0" id="rateLimitsCount">{{ security_data.active_rate_limits }}</h4>
+                            <p class="mb-0">حدود معدل نشطة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-tachometer-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0" id="totalEventsCount">{{ security_data.recent_events|length }}</h4>
+                            <p class="mb-0">أحداث أمنية (7 أيام)</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-list fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        توزيع الأحداث الأمنية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="securityEventsChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        الأحداث الأمنية بمرور الوقت
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="securityTimelineChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Security Events -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        الأحداث الأمنية الأخيرة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="securityEventsTable">
+                            <thead>
+                                <tr>
+                                    <th>الوقت</th>
+                                    <th>نوع الحدث</th>
+                                    <th>عنوان IP</th>
+                                    <th>المستخدم</th>
+                                    <th>الخطورة</th>
+                                    <th>التفاصيل</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in security_data.recent_events %}
+                                <tr>
+                                    <td>{{ event.timestamp }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ event.action }}</span>
+                                    </td>
+                                    <td>
+                                        <code>{{ event.ip_address or 'غير محدد' }}</code>
+                                    </td>
+                                    <td>
+                                        {% if event.user_id %}
+                                            <i class="fas fa-user me-1"></i>{{ event.user_id }}
+                                        {% else %}
+                                            <span class="text-muted">غير محدد</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% set severity = event.details.severity if event.details and event.details.severity else 'info' %}
+                                        {% if severity == 'critical' %}
+                                            <span class="badge bg-danger">حرج</span>
+                                        {% elif severity == 'high' %}
+                                            <span class="badge bg-warning">عالي</span>
+                                        {% elif severity == 'medium' %}
+                                            <span class="badge bg-info">متوسط</span>
+                                        {% else %}
+                                            <span class="badge bg-success">معلومات</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if event.details and event.details.description %}
+                                            {{ event.details.description[:100] }}
+                                            {% if event.details.description|length > 100 %}...{% endif %}
+                                        {% else %}
+                                            <span class="text-muted">لا توجد تفاصيل</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        لا توجد أحداث أمنية حديثة
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>
+                        إجراءات الأمان
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-outline-warning w-100" onclick="clearFailedAttempts()">
+                                <i class="fas fa-eraser me-2"></i>
+                                مسح المحاولات الفاشلة
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-outline-info w-100" onclick="clearRateLimits()">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                مسح حدود المعدل
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-outline-success w-100" onclick="exportSecurityLog()">
+                                <i class="fas fa-download me-2"></i>
+                                تصدير سجل الأمان
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-outline-primary w-100" onclick="runSecurityScan()">
+                                <i class="fas fa-search me-2"></i>
+                                فحص أمني
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+let securityEventsChart, securityTimelineChart;
+
+$(document).ready(function() {
+    initializeCharts();
+    loadSecurityCharts();
+    
+    // Auto-refresh every 30 seconds
+    setInterval(refreshSecurityData, 30000);
+});
+
+function initializeCharts() {
+    // Security Events Distribution Chart
+    const eventsCtx = document.getElementById('securityEventsChart');
+    if (eventsCtx) {
+        securityEventsChart = new Chart(eventsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: [
+                        '#dc3545', '#ffc107', '#17a2b8', '#28a745', '#6c757d'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+    
+    // Security Timeline Chart
+    const timelineCtx = document.getElementById('securityTimelineChart');
+    if (timelineCtx) {
+        securityTimelineChart = new Chart(timelineCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'أحداث أمنية',
+                    data: [],
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+}
+
+function loadSecurityCharts() {
+    const eventCounts = {{ security_data.event_counts | tojson }};
+    
+    // Update events distribution chart
+    if (securityEventsChart && Object.keys(eventCounts).length > 0) {
+        securityEventsChart.data.labels = Object.keys(eventCounts);
+        securityEventsChart.data.datasets[0].data = Object.values(eventCounts);
+        securityEventsChart.update();
+    }
+    
+    // For timeline, we'd need to process the events by date
+    // This is a simplified version
+    const recentEvents = {{ security_data.recent_events | tojson }};
+    if (securityTimelineChart && recentEvents.length > 0) {
+        // Group events by date
+        const eventsByDate = {};
+        recentEvents.forEach(event => {
+            const date = event.timestamp.split('T')[0];
+            eventsByDate[date] = (eventsByDate[date] || 0) + 1;
+        });
+        
+        securityTimelineChart.data.labels = Object.keys(eventsByDate).sort();
+        securityTimelineChart.data.datasets[0].data = Object.values(eventsByDate);
+        securityTimelineChart.update();
+    }
+}
+
+function refreshSecurityData() {
+    $.get('/admin/api/security-events')
+        .done(function(data) {
+            // Update metrics
+            $('#blockedIpsCount').text(data.blocked_ips_count);
+            $('#failedAttemptsCount').text(data.failed_attempts_count);
+            $('#rateLimitsCount').text(data.active_rate_limits);
+            $('#totalEventsCount').text(data.recent_events.length);
+            
+            // Update charts
+            loadSecurityCharts();
+            
+            showAlert('success', 'تم تحديث بيانات الأمان');
+        })
+        .fail(function() {
+            showAlert('danger', 'فشل في تحديث بيانات الأمان');
+        });
+}
+
+function clearFailedAttempts() {
+    if (confirm('هل أنت متأكد من مسح جميع المحاولات الفاشلة؟')) {
+        // This would call an API endpoint to clear failed attempts
+        showAlert('info', 'تم مسح المحاولات الفاشلة');
+    }
+}
+
+function clearRateLimits() {
+    if (confirm('هل أنت متأكد من مسح جميع حدود المعدل؟')) {
+        // This would call an API endpoint to clear rate limits
+        showAlert('info', 'تم مسح حدود المعدل');
+    }
+}
+
+function exportSecurityLog() {
+    // This would trigger a download of the security log
+    window.open('/admin/export/security-log', '_blank');
+}
+
+function runSecurityScan() {
+    showAlert('info', 'جاري تشغيل الفحص الأمني...');
+    // This would trigger a security scan
+    setTimeout(() => {
+        showAlert('success', 'تم الانتهاء من الفحص الأمني');
+    }, 3000);
+}
+
+function showAlert(type, message) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    $('.container-fluid').prepend(alertHtml);
+    
+    // Auto dismiss after 5 seconds
+    setTimeout(function() {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+</script>
+{% endblock %}

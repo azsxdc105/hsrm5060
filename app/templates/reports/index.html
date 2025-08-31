@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block title %}التقارير والإحصائيات{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    التقارير والإحصائيات
+                </h1>
+                <div>
+                    <button class="btn btn-outline-primary me-2" onclick="exportClaimsCSV()">
+                        <i class="fas fa-download me-2"></i>
+                        تصدير CSV
+                    </button>
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        العودة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4" id="summary-cards">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0" id="total-claims">-</h4>
+                            <p class="mb-0">إجمالي المطالبات</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-file-alt fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small id="claims-growth" class="text-light">-</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0" id="total-amount">-</h4>
+                            <p class="mb-0">إجمالي المبالغ</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-money-bill-wave fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small id="amount-growth" class="text-light">-</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0" id="sent-claims">-</h4>
+                            <p class="mb-0">المطالبات المرسلة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-paper-plane fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small id="sent-growth" class="text-light">-</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0" id="paid-claims">-</h4>
+                            <p class="mb-0">المطالبات المدفوعة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small id="paid-growth" class="text-light">-</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        توزيع المطالبات حسب الحالة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statusChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        المطالبات حسب الشركة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="companyChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        الخط الزمني للمطالبات
+                    </h5>
+                    <div>
+                        <select class="form-select form-select-sm" id="timelineRange" onchange="updateTimelineChart()">
+                            <option value="7">آخر 7 أيام</option>
+                            <option value="30" selected>آخر 30 يوم</option>
+                            <option value="90">آخر 90 يوم</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="timelineChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Cities -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        أهم المدن
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="citiesChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        معلومات إضافية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4 class="text-primary" id="avg-claim-amount">-</h4>
+                                <p class="text-muted">متوسط قيمة المطالبة</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4 class="text-success" id="success-rate">-</h4>
+                                <p class="text-muted">معدل النجاح</p>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4 class="text-info" id="active-companies">-</h4>
+                                <p class="text-muted">الشركات النشطة</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4 class="text-warning" id="avg-processing-time">-</h4>
+                                <p class="text-muted">متوسط وقت المعالجة</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+let statusChart, companyChart, timelineChart, citiesChart;
+
+$(document).ready(function() {
+    loadSummaryData();
+    loadStatusChart();
+    loadCompanyChart();
+    loadTimelineChart();
+    loadCitiesChart();
+});
+
+function loadSummaryData() {
+    $.get('/reports/api/monthly-summary')
+        .done(function(data) {
+            $('#total-claims').text(data.current_month.total_claims);
+            $('#total-amount').text(formatCurrency(data.current_month.total_amount));
+            $('#sent-claims').text(data.current_month.sent_claims);
+            $('#paid-claims').text(data.current_month.paid_claims);
+            
+            $('#claims-growth').text(formatGrowth(data.growth.total_claims));
+            $('#amount-growth').text(formatGrowth(data.growth.total_amount));
+            $('#sent-growth').text(formatGrowth(data.growth.sent_claims));
+            $('#paid-growth').text(formatGrowth(data.growth.paid_claims));
+            
+            // Calculate additional metrics
+            const avgAmount = data.current_month.total_claims > 0 ? 
+                data.current_month.total_amount / data.current_month.total_claims : 0;
+            $('#avg-claim-amount').text(formatCurrency(avgAmount));
+            
+            const successRate = data.current_month.total_claims > 0 ?
+                (data.current_month.sent_claims / data.current_month.total_claims * 100).toFixed(1) + '%' : '0%';
+            $('#success-rate').text(successRate);
+        })
+        .fail(function() {
+            console.error('Failed to load summary data');
+        });
+}
+
+function loadStatusChart() {
+    $.get('/reports/api/claims-by-status')
+        .done(function(data) {
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: data.colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        });
+}
+
+function loadCompanyChart() {
+    $.get('/reports/api/claims-by-company')
+        .done(function(data) {
+            const ctx = document.getElementById('companyChart').getContext('2d');
+            companyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'عدد المطالبات',
+                        data: data.claims_count,
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+}
+
+function loadTimelineChart() {
+    const days = $('#timelineRange').val() || 30;
+    $.get('/reports/api/claims-timeline?days=' + days)
+        .done(function(data) {
+            const ctx = document.getElementById('timelineChart').getContext('2d');
+            
+            if (timelineChart) {
+                timelineChart.destroy();
+            }
+            
+            timelineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'عدد المطالبات',
+                        data: data.claims_count,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+}
+
+function loadCitiesChart() {
+    $.get('/reports/api/top-cities')
+        .done(function(data) {
+            const ctx = document.getElementById('citiesChart').getContext('2d');
+            citiesChart = new Chart(ctx, {
+                type: 'horizontalBar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'عدد المطالبات',
+                        data: data.claims_count,
+                        backgroundColor: 'rgba(255, 159, 64, 0.8)',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+}
+
+function updateTimelineChart() {
+    loadTimelineChart();
+}
+
+function exportClaimsCSV() {
+    const days = $('#timelineRange').val() || 30;
+    window.open('/reports/export/claims-csv?days=' + days, '_blank');
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('ar-SA', {
+        style: 'currency',
+        currency: 'SAR'
+    }).format(amount);
+}
+
+function formatGrowth(growth) {
+    const sign = growth >= 0 ? '+' : '';
+    return sign + growth.toFixed(1) + '% من الشهر الماضي';
+}
+</script>
+{% endblock %}

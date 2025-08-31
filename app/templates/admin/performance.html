@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block title %}مراقبة الأداء - لوحة الإدارة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    مراقبة الأداء
+                </h1>
+                <div>
+                    <form method="POST" action="{{ url_for('admin.clear_cache') }}" class="d-inline">
+                        <button type="submit" class="btn btn-warning me-2" onclick="return confirm('هل أنت متأكد من مسح الذاكرة المؤقتة؟')">
+                            <i class="fas fa-trash me-2"></i>مسح الذاكرة المؤقتة
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin.optimize_database') }}" class="d-inline">
+                        <button type="submit" class="btn btn-primary" onclick="return confirm('هل أنت متأكد من تحسين قاعدة البيانات؟')">
+                            <i class="fas fa-database me-2"></i>تحسين قاعدة البيانات
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Health Status -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-{% if health.database.status == 'healthy' %}success{% else %}danger{% endif %} text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">قاعدة البيانات</h4>
+                            <p class="card-text">{{ health.database.status }}</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-database fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-{% if health.cache.status == 'healthy' %}success{% else %}danger{% endif %} text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">الذاكرة المؤقتة</h4>
+                            <p class="card-text">{{ health.cache.status }}</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-memory fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-{% if health.disk_space.status == 'healthy' %}success{% elif health.disk_space.status == 'warning' %}warning{% else %}danger{% endif %} text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">مساحة القرص</h4>
+                            <p class="card-text">{{ "%.1f"|format(health.disk_space.free_percent) }}% متاح</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-hdd fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">إجمالي الطلبات</h4>
+                            <p class="card-text">{{ performance.total_requests }}</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-server me-2"></i>
+                        مقاييس النظام
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h3 class="text-primary">{{ "%.1f"|format(performance.system_metrics.cpu_percent) }}%</h3>
+                                <p class="text-muted">استخدام المعالج</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h3 class="text-warning">{{ "%.1f"|format(performance.system_metrics.memory_percent) }}%</h3>
+                                <p class="text-muted">استخدام الذاكرة</p>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">الذاكرة المتاحة:</small><br>
+                            <strong>{{ "%.1f"|format(performance.system_metrics.memory_available / 1024 / 1024 / 1024) }} GB</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">مساحة القرص المتاحة:</small><br>
+                            <strong>{{ "%.1f"|format(performance.system_metrics.disk_free / 1024 / 1024 / 1024) }} GB</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-database me-2"></i>
+                        مقاييس قاعدة البيانات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if performance.database_metrics %}
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h3 class="text-success">{{ performance.database_metrics.pool_size }}</h3>
+                                <p class="text-muted">حجم المجموعة</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h3 class="text-info">{{ performance.database_metrics.checked_out }}</h3>
+                                <p class="text-muted">الاتصالات النشطة</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">لا توجد بيانات متاحة</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Request Performance -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-stopwatch me-2"></i>
+                        أداء الطلبات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if performance.request_metrics %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>المسار</th>
+                                        <th>عدد الطلبات</th>
+                                        <th>متوسط الوقت</th>
+                                        <th>أقصى وقت</th>
+                                        <th>أقل وقت</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for endpoint, metrics in performance.request_metrics.items() %}
+                                    <tr>
+                                        <td><code>{{ endpoint }}</code></td>
+                                        <td>{{ metrics.request_count }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if metrics.avg_time > 2 %}danger{% elif metrics.avg_time > 1 %}warning{% else %}success{% endif %}">
+                                                {{ "%.3f"|format(metrics.avg_time) }}s
+                                            </span>
+                                        </td>
+                                        <td>{{ "%.3f"|format(metrics.max_time) }}s</td>
+                                        <td>{{ "%.3f"|format(metrics.min_time) }}s</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">لا توجد بيانات أداء متاحة</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Slow Queries -->
+    {% if performance.slow_queries %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        الطلبات البطيئة (أكثر من 2 ثانية)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>المسار</th>
+                                    <th>الطريقة</th>
+                                    <th>المدة</th>
+                                    <th>عنوان IP</th>
+                                    <th>الوقت</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for query in performance.slow_queries[-20:] %}
+                                <tr>
+                                    <td><code>{{ query.endpoint }}</code></td>
+                                    <td><span class="badge bg-primary">{{ query.method }}</span></td>
+                                    <td><span class="badge bg-danger">{{ "%.3f"|format(query.duration) }}s</span></td>
+                                    <td>{{ query.ip }}</td>
+                                    <td><small>{{ query.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</small></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Database Tables -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-table me-2"></i>
+                        أحجام الجداول
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if tables %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>الجدول</th>
+                                        <th>عدد الصفوف</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for table, info in tables.items() %}
+                                    <tr>
+                                        <td><code>{{ table }}</code></td>
+                                        <td>
+                                            {% if info.row_count is defined %}
+                                                {{ "{:,}".format(info.row_count) }}
+                                            {% else %}
+                                                <span class="text-danger">{{ info.error }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">لا توجد بيانات متاحة</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        تحليل الاستعلامات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if slow_queries.query_patterns %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>نوع العملية</th>
+                                        <th>المورد</th>
+                                        <th>العدد</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for pattern, info in slow_queries.query_patterns.items() %}
+                                    <tr>
+                                        <td><span class="badge bg-info">{{ info.action }}</span></td>
+                                        <td><code>{{ info.resource_type }}</code></td>
+                                        <td>{{ info.count }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">
+                            إجمالي العمليات: {{ slow_queries.total_operations }} (آخر {{ slow_queries.analysis_period }})
+                        </small>
+                    {% else %}
+                        <p class="text-muted text-center">لا توجد بيانات تحليل متاحة</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh page every 30 seconds
+setTimeout(function() {
+    location.reload();
+}, 30000);
+
+// Add refresh button functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Add manual refresh button
+    const refreshBtn = document.createElement('button');
+    refreshBtn.className = 'btn btn-outline-secondary btn-sm';
+    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث';
+    refreshBtn.onclick = function() {
+        location.reload();
+    };
+    
+    // Add to header
+    const header = document.querySelector('.d-flex.justify-content-between');
+    if (header) {
+        header.children[1].appendChild(refreshBtn);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+# 🐳 Docker Compose لنظام إدارة المطالبات
+
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=sqlite:///claims.db
+      - MAIL_SERVER=${MAIL_SERVER}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USE_TLS=${MAIL_USE_TLS}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER}
+      - SECRET_KEY=${SECRET_KEY}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./claims.db:/app/claims.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: PostgreSQL database for production
+  # db:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_DB: claims
+  #     POSTGRES_USER: claims_user
+  #     POSTGRES_PASSWORD: claims_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+# volumes:
+#   postgres_data:

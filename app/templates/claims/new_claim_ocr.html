@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}إنشاء مطالبة جديدة مع الذكاء الاصطناعي{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-robot me-2"></i>
+                        إنشاء مطالبة جديدة مع الذكاء الاصطناعي
+                    </h4>
+                    <p class="text-muted mb-0">ارفع ملف PDF أو صورة لاستخراج البيانات تلقائياً</p>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Step 1: Upload File for OCR -->
+                    {% if not extracted_data %}
+                    <div class="row">
+                        <div class="col-md-8 mx-auto">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-upload me-2"></i>
+                                        الخطوة 1: رفع الملف
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <form method="POST" enctype="multipart/form-data">
+                                        {{ ocr_form.hidden_tag() }}
+                                        
+                                        <div class="mb-3">
+                                            {{ ocr_form.file.label(class="form-label") }}
+                                            {{ ocr_form.file(class="form-control") }}
+                                            <div class="form-text">{{ ocr_form.file.description }}</div>
+                                            {% if ocr_form.file.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in ocr_form.file.errors %}
+                                                        <small>{{ error }}</small><br>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="d-grid gap-2">
+                                            {{ ocr_form.extract_data(class="btn btn-primary btn-lg") }}
+                                        </div>
+                                    </form>
+                                    
+                                    <hr>
+                                    
+                                    <div class="text-center">
+                                        <p class="text-muted">أو</p>
+                                        <a href="{{ url_for('claims.new') }}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-edit me-2"></i>
+                                            إدخال يدوي بدون OCR
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Step 2: Review and Edit Extracted Data -->
+                    {% if extracted_data %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        البيانات المستخرجة
+                                    </h5>
+                                    <small>مستوى الثقة: {{ "%.1f"|format(extracted_data.ocr_confidence * 100) }}%</small>
+                                </div>
+                                <div class="card-body">
+                                    {% if extracted_data.ocr_confidence < 0.7 %}
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        مستوى الثقة منخفض. يرجى مراجعة البيانات بعناية.
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <form method="POST">
+                                        {{ autofill_form.hidden_tag() }}
+                                        
+                                        <div class="mb-3">
+                                            {{ autofill_form.client_name.label(class="form-label") }}
+                                            {{ autofill_form.client_name(class="form-control") }}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            {{ autofill_form.client_national_id.label(class="form-label") }}
+                                            {{ autofill_form.client_national_id(class="form-control") }}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            {{ autofill_form.policy_number.label(class="form-label") }}
+                                            {{ autofill_form.policy_number(class="form-control") }}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            {{ autofill_form.incident_number.label(class="form-label") }}
+                                            {{ autofill_form.incident_number(class="form-control") }}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            {{ autofill_form.incident_date.label(class="form-label") }}
+                                            {{ autofill_form.incident_date(class="form-control") }}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            {{ autofill_form.claim_amount.label(class="form-label") }}
+                                            <div class="input-group">
+                                                {{ autofill_form.claim_amount(class="form-control") }}
+                                                <span class="input-group-text">ريال</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="d-grid gap-2">
+                                            {{ autofill_form.use_extracted_data(class="btn btn-success") }}
+                                            {{ autofill_form.manual_entry(class="btn btn-outline-secondary") }}
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-file-alt me-2"></i>
+                                        النص المستخرج
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;">
+                                        <pre class="mb-0" style="white-space: pre-wrap; font-size: 0.9em;">{{ extracted_data.raw_text or 'لم يتم استخراج نص' }}</pre>
+                                    </div>
+                                    
+                                    <div class="mt-3">
+                                        <small class="text-muted">
+                                            <strong>طريقة الاستخراج:</strong> {{ extracted_data.ocr_method }}<br>
+                                            <strong>مستوى الثقة:</strong> {{ "%.2f"|format(extracted_data.ocr_confidence) }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Step 3: Complete Claim Form (if data was used) -->
+                    {% if claim_form.client_name.data %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-edit me-2"></i>
+                                        إكمال بيانات المطالبة
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <form method="POST" enctype="multipart/form-data" action="{{ url_for('claims.new') }}">
+                                        {{ claim_form.hidden_tag() }}
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    {{ claim_form.company_id.label(class="form-label") }}
+                                                    {{ claim_form.company_id(class="form-select") }}
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    {{ claim_form.client_name.label(class="form-label") }}
+                                                    {{ claim_form.client_name(class="form-control") }}
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    {{ claim_form.client_national_id.label(class="form-label") }}
+                                                    {{ claim_form.client_national_id(class="form-control") }}
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    {{ claim_form.policy_number.label(class="form-label") }}
+                                                    {{ claim_form.policy_number(class="form-control") }}
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    {{ claim_form.incident_number.label(class="form-label") }}
+                                                    {{ claim_form.incident_number(class="form-control") }}
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    {{ claim_form.incident_date.label(class="form-label") }}
+                                                    {{ claim_form.incident_date(class="form-control") }}
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    {{ claim_form.claim_amount.label(class="form-label") }}
+                                                    <div class="input-group">
+                                                        {{ claim_form.claim_amount(class="form-control") }}
+                                                        <span class="input-group-text">ريال</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    {{ claim_form.coverage_type.label(class="form-label") }}
+                                                    {{ claim_form.coverage_type(class="form-select") }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            {{ claim_form.claim_details.label(class="form-label") }}
+                                            {{ claim_form.claim_details(class="form-control", rows="4") }}
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    {{ claim_form.city.label(class="form-label") }}
+                                                    {{ claim_form.city(class="form-control") }}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    {{ claim_form.tags.label(class="form-label") }}
+                                                    {{ claim_form.tags(class="form-control") }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            {{ claim_form.files.label(class="form-label") }}
+                                            {{ claim_form.files(class="form-control", multiple=True) }}
+                                            <div class="form-text">{{ claim_form.files.description }}</div>
+                                        </div>
+                                        
+                                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                            <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary me-md-2">إلغاء</a>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save me-2"></i>
+                                                إنشاء المطالبة
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add some JavaScript for better UX
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-scroll to extracted data section if it exists
+    {% if extracted_data %}
+    document.querySelector('.card.border-success').scrollIntoView({ behavior: 'smooth' });
+    {% endif %}
+    
+    // File upload preview
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                console.log(`Selected file: ${file.name} (${fileSize} MB)`);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

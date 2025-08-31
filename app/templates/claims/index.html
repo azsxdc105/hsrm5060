@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}المطالبات{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-file-alt me-2"></i>
+                    المطالبات
+                </h1>
+                <div>
+                    <a href="{{ url_for('claims.new_with_ocr') }}" class="btn btn-success me-2">
+                        <i class="fas fa-robot me-2"></i>
+                        مطالبة جديدة مع AI
+                    </a>
+                    <a href="{{ url_for('claims.new') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>
+                        مطالبة جديدة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">البحث</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ request.args.get('search', '') }}" 
+                                   placeholder="اسم العميل أو رقم الهوية">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="company_id" class="form-label">شركة التأمين</label>
+                            <select class="form-select" id="company_id" name="company_id">
+                                <option value="">جميع الشركات</option>
+                                {% for company in companies %}
+                                    <option value="{{ company.id }}" 
+                                            {{ 'selected' if request.args.get('company_id') == company.id|string }}>
+                                        {{ company.name_ar }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">الحالة</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">جميع الحالات</option>
+                                <option value="draft" {{ 'selected' if request.args.get('status') == 'draft' }}>مسودة</option>
+                                <option value="ready" {{ 'selected' if request.args.get('status') == 'ready' }}>جاهز</option>
+                                <option value="sent" {{ 'selected' if request.args.get('status') == 'sent' }}>مرسل</option>
+                                <option value="acknowledged" {{ 'selected' if request.args.get('status') == 'acknowledged' }}>مستلم</option>
+                                <option value="paid" {{ 'selected' if request.args.get('status') == 'paid' }}>مدفوع</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="date_from" class="form-label">من تاريخ</label>
+                            <input type="date" class="form-control" id="date_from" name="date_from" 
+                                   value="{{ request.args.get('date_from', '') }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-search me-2"></i>
+                                    بحث
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Claims Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة المطالبات
+                        <span class="badge bg-primary ms-2">{{ claims.total }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if claims.items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>رقم المطالبة</th>
+                                        <th>نوع المطالبة</th>
+                                        <th>اسم العميل</th>
+                                        <th>شركة التأمين</th>
+                                        <th>مبلغ المطالبة</th>
+                                        <th>تاريخ الحادث</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for claim in claims.items %}
+                                    <tr>
+                                        <td>
+                                            <strong>#{{ claim.id }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if claim.claim_type %}
+                                                <div class="d-flex align-items-center">
+                                                    <i class="{{ claim.claim_type.icon }} me-2" style="color: {{ claim.claim_type.color }};"></i>
+                                                    <div>
+                                                        <strong>{{ claim.claim_type.name_ar }}</strong>
+                                                        <br>
+                                                        <small class="text-muted">{{ claim.claim_type.code }}</small>
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">
+                                                    <i class="fas fa-file-alt me-2"></i>
+                                                    نموذج تقليدي
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <strong>{{ claim.client_name }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ claim.client_national_id }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if claim.company %}
+                                                {{ claim.company.name_ar }}
+                                            {% else %}
+                                                <span class="text-muted">غير محدد</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <strong>{{ "{:,.2f}".format(claim.claim_amount) }}</strong>
+                                            <small class="text-muted d-block">ريال</small>
+                                        </td>
+                                        <td>
+                                            {{ claim.incident_date.strftime('%Y-%m-%d') if claim.incident_date else 'غير محدد' }}
+                                        </td>
+                                        <td>
+                                            {% set status_colors = {
+                                                'draft': 'secondary',
+                                                'ready': 'info',
+                                                'sent': 'primary',
+                                                'acknowledged': 'warning',
+                                                'paid': 'success',
+                                                'failed': 'danger'
+                                            } %}
+                                            {% set status_names = {
+                                                'draft': 'مسودة',
+                                                'ready': 'جاهز',
+                                                'sent': 'مرسل',
+                                                'acknowledged': 'مستلم',
+                                                'paid': 'مدفوع',
+                                                'failed': 'فشل'
+                                            } %}
+                                            <span class="badge bg-{{ status_colors.get(claim.status, 'secondary') }}">
+                                                {{ status_names.get(claim.status, claim.status) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {{ claim.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                {% if claim.claim_type %}
+                                                <a href="{{ url_for('dynamic_forms.view_dynamic_claim', claim_id=claim.id) }}" 
+                                                   class="btn btn-sm btn-outline-primary" title="عرض ديناميكي">
+                                                    <i class="fas fa-magic"></i>
+                                                </a>
+                                                {% else %}
+                                                <a href="{{ url_for('claims.view', id=claim.id) }}" 
+                                                   class="btn btn-sm btn-outline-primary" title="عرض">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% endif %}
+                                                <a href="{{ url_for('claims.edit', id=claim.id) }}" 
+                                                   class="btn btn-sm btn-outline-warning" title="تعديل">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                {% if claim.status in ['draft', 'ready'] %}
+                                                    <form method="POST" action="{{ url_for('claims.send', id=claim.id) }}" 
+                                                          class="d-inline">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                        <button type="submit" class="btn btn-sm btn-outline-success" 
+                                                                title="إرسال" onclick="return confirm('هل تريد إرسال هذه المطالبة؟')">
+                                                            <i class="fas fa-paper-plane"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                                <form method="POST" action="{{ url_for('claims.delete', id=claim.id) }}" 
+                                                      class="d-inline">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                            title="حذف" onclick="return confirm('هل أنت متأكد من حذف هذه المطالبة؟')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if claims.pages > 1 %}
+                        <nav aria-label="صفحات المطالبات">
+                            <ul class="pagination justify-content-center">
+                                {% if claims.has_prev %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('claims.index', page=claims.prev_num, **request.args) }}">
+                                            السابق
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for page_num in claims.iter_pages() %}
+                                    {% if page_num %}
+                                        {% if page_num != claims.page %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ url_for('claims.index', page=page_num, **request.args) }}">
+                                                    {{ page_num }}
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ page_num }}</span>
+                                            </li>
+                                        {% endif %}
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">…</span>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if claims.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('claims.index', page=claims.next_num, **request.args) }}">
+                                            التالي
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد مطالبات</h5>
+                            <p class="text-muted">ابدأ بإنشاء مطالبة جديدة</p>
+                            <a href="{{ url_for('claims.new_with_ocr') }}" class="btn btn-success me-2">
+                                <i class="fas fa-robot me-2"></i>
+                                مطالبة جديدة مع AI
+                            </a>
+                            <a href="{{ url_for('claims.new') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                مطالبة جديدة
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-submit search form on select change
+document.addEventListener('DOMContentLoaded', function() {
+    const selects = document.querySelectorAll('#company_id, #status');
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+    
+    // Clear search
+    const searchInput = document.getElementById('search');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                this.form.submit();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

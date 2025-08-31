@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  insurance-app:
+    build: .
+    container_name: insurance_claims_app
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=your-super-secret-key-change-this-immediately
+      - SIMPLE_WHATSAPP_NUMBER=+966501234567
+      - SIMPLE_WHATSAPP_ENABLED=true
+      - AI_CLASSIFICATION_ENABLED=true
+      - ADVANCED_NOTIFICATIONS_ENABLED=true
+    volumes:
+      - ./uploads:/app/uploads
+      - ./instance:/app/instance
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - insurance-network
+
+networks:
+  insurance-network:
+    driver: bridge

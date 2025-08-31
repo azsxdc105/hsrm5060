@@ -51,7 +51,35 @@
                                 {% endif %}
                             </div>
                         </div>
-                        
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.phone.label(class="form-label") }}
+                                {{ form.phone(class="form-control") }}
+                                {% if form.phone.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.phone.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">للرسائل النصية (SMS)</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                {{ form.whatsapp_number.label(class="form-label") }}
+                                {{ form.whatsapp_number(class="form-control") }}
+                                {% if form.whatsapp_number.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.whatsapp_number.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">لإشعارات الواتساب</small>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 {{ form.password.label(class="form-label") }}
@@ -93,11 +121,11 @@
                             
                             <div class="col-md-6 mb-3">
                                 <div class="form-check mt-4">
-                                    {{ form.active(class="form-check-input") }}
-                                    {{ form.active.label(class="form-check-label") }}
-                                    {% if form.active.errors %}
+                                    {{ form.is_active(class="form-check-input") }}
+                                    {{ form.is_active.label(class="form-check-label") }}
+                                    {% if form.is_active.errors %}
                                         <div class="text-danger">
-                                            {% for error in form.active.errors %}
+                                            {% for error in form.is_active.errors %}
                                                 <small>{{ error }}</small>
                                             {% endfor %}
                                         </div>
